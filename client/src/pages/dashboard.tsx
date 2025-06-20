@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { ProgramCard } from "@/components/program-card";
-import { ProgressTimeline } from "@/components/progress-timeline";
 import { ActivityTable } from "@/components/activity-table";
 import { ProgramModal } from "@/components/program-modal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrograms, useActivities } from "@/hooks/use-programs";
-import { Plus, RefreshCw, BarChart3 } from "lucide-react";
+import { RefreshCw, BarChart3, Plus } from "lucide-react";
 import type { Program } from "@shared/schema";
+import logo from "@assets/logo_1750430330014.png";
 
 export default function Dashboard() {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
@@ -53,20 +53,19 @@ export default function Dashboard() {
         {/* Dashboard Header */}
         <div className="bg-primary text-primary-foreground rounded-xl p-8 mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center">
-                <BarChart3 className="mr-3 w-8 h-8" />
-                Dashboard
-              </h1>
-              <p className="text-primary-foreground/80 text-lg">
-                Good morning! Here's your program management overview.
-              </p>
+            <div className="flex items-center gap-4">
+              <img src={logo} alt="BPN Logo" className="h-12 w-12 object-contain" />
+              <div>
+                <h1 className="text-3xl font-bold mb-2 flex items-center">
+                  <BarChart3 className="mr-3 w-8 h-8" />
+                  BPN Program Management
+                </h1>
+                <p className="text-primary-foreground/80 text-lg">
+                  Good morning! Here's your program management overview.
+                </p>
+              </div>
             </div>
             <div className="flex space-x-4">
-              <Button variant="secondary" className="space-x-2">
-                <Plus className="w-4 h-4" />
-                <span>New Update</span>
-              </Button>
               <Button 
                 variant="outline" 
                 className="space-x-2 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
@@ -96,13 +95,6 @@ export default function Dashboard() {
             ))}
           </div>
         </section>
-
-        {/* Progress Timeline Section */}
-        {programs && (
-          <section className="mb-12">
-            <ProgressTimeline programs={programs} />
-          </section>
-        )}
 
         {/* Recent Activity Section */}
         {activities && programs && (

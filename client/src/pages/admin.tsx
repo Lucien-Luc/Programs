@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { ProgramForm } from "@/components/admin/program-form";
 import { TableBuilder } from "@/components/admin/table-builder";
+import { LoginForm } from "@/components/login-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { usePrograms, useDeleteProgram } from "@/hooks/use-programs";
+import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { 
   Settings, 
@@ -35,17 +37,37 @@ import {
   Users,
   Activity,
   FileText,
-  Database
+  Database,
+  LogOut,
+  RefreshCw
 } from "lucide-react";
 import type { Program } from "@shared/schema";
+import logo from "@assets/logo_1750430330014.png";
 
 export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   
+  const { isAuthenticated, isAdmin, logout, isLoading: authLoading } = useAuth();
   const { data: programs, isLoading } = usePrograms();
   const deleteProgram = useDeleteProgram();
+
+  const handleLoginSuccess = () => {
+    // Component will re-render with authenticated state
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isAdmin) {
+    return <LoginForm onSuccess={handleLoginSuccess} />;
+  }
 
   const filteredPrograms = programs?.filter(program =>
     program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,34 +97,47 @@ export default function Admin() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center">
-              <Settings className="mr-3 w-8 h-8" />
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Manage programs, activities, and dashboard configuration
-            </p>
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="BPN Logo" className="h-12 w-12 object-contain" />
+            <div>
+              <h1 className="text-3xl font-bold text-foreground flex items-center">
+                <Settings className="mr-3 w-8 h-8" />
+                Admin Dashboard
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage programs, activities, and dashboard configuration
+              </p>
+            </div>
           </div>
-          <Dialog open={formOpen} onOpenChange={setFormOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setSelectedProgram(null)}>
-                <Plus className="w-4 h-4 mr-2" />
-                New Program
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedProgram ? "Edit Program" : "Create New Program"}
-                </DialogTitle>
-              </DialogHeader>
-              <ProgramForm 
-                program={selectedProgram} 
-                onClose={handleFormClose}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-3">
+            <Dialog open={formOpen} onOpenChange={setFormOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setSelectedProgram(null)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Program
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedProgram ? "Edit Program" : "Create New Program"}
+                  </DialogTitle>
+                </DialogHeader>
+                <ProgramForm 
+                  program={selectedProgram} 
+                  onClose={handleFormClose}
+                />
+              </DialogContent>
+            </Dialog>
+            <Button
+              variant="outline"
+              onClick={logout}
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Tabs */}

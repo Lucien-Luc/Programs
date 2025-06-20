@@ -25,6 +25,7 @@ import {
   ChevronDown,
   LogOut
 } from "lucide-react";
+import logo from "@assets/logo_1750430330014.png";
 
 const languages = [
   { code: "en", label: "🇬🇧 English" },
@@ -53,11 +54,8 @@ export function Navigation() {
         {/* Left Side: Logo and Brand */}
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <BarChart3 className="text-white text-xl" />
-            </div>
+            <img src={logo} alt="BPN Logo" className="w-12 h-12 object-contain" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">BPN</h1>
               <p className="text-sm text-muted-foreground">PROGRAM MANAGEMENT</p>
             </div>
           </Link>
@@ -82,10 +80,7 @@ export function Navigation() {
             <ChartBar className="w-4 h-4" />
             <span>Analytics</span>
           </Button>
-          <Button variant="ghost" className="space-x-2">
-            <User className="w-4 h-4" />
-            <span>Profile</span>
-          </Button>
+
         </div>
 
         {/* Right Side: Controls */}
@@ -133,23 +128,7 @@ export function Navigation() {
             </Button>
           </Link>
 
-          {/* User Profile */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4" />
-                </div>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
         </div>
       </div>
     </nav>
