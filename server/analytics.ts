@@ -7,6 +7,7 @@ const router = Router();
 
 // Chart configuration storage key
 const CHART_CONFIG_KEY = "analytics_chart_configs";
+const ANALYTICS_DATA_KEY = "analytics_data";
 
 // Get chart configurations
 router.get("/charts", async (req, res) => {
@@ -153,6 +154,67 @@ router.get("/data/:dataSource", async (req, res) => {
   } catch (error) {
     console.error("Error fetching analytics data:", error);
     res.status(500).json({ error: "Failed to fetch analytics data" });
+  }
+});
+
+// Get analytics data
+router.get("/data", async (req, res) => {
+  try {
+    const [setting] = await db
+      .select()
+      .from(adminSettings)
+      .where(eq(adminSettings.key, ANALYTICS_DATA_KEY));
+
+    if (setting) {
+      res.json(JSON.parse(setting.value));
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    console.error("Error fetching analytics data:", error);
+    res.status(500).json({ error: "Failed to fetch analytics data" });
+  }
+});
+
+// Save analytics data
+router.post("/data", async (req, res) => {
+  try {
+    const { data } = req.body;
+
+    if (!Array.isArray(data)) {
+      return res.status(400).json({ error: "Data must be an array" });
+    }
+
+    const dataJson = JSON.stringify(data);
+
+    // Check if setting exists
+    const [existingSetting] = await db
+      .select()
+      .from(adminSettings)
+      .where(eq(adminSettings.key, ANALYTICS_DATA_KEY));
+
+    if (existingSetting) {
+      // Update existing data
+      await db
+        .update(adminSettings)
+        .set({ 
+          value: dataJson,
+          updatedAt: new Date()
+        })
+        .where(eq(adminSettings.key, ANALYTICS_DATA_KEY));
+    } else {
+      // Create new data
+      await db.insert(adminSettings).values({
+        key: ANALYTICS_DATA_KEY,
+        value: dataJson,
+        category: "analytics"
+      });
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error("Error saving analytics data:", error);
+    res.status(500).json({ error: "Failed to save analytics data" });
   }
 });
 

@@ -45,6 +45,499 @@ import {
   ChartBar
 } from "lucide-react";
 import type { Program } from "@shared/schema";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React from "react";
+
+interface ChartConfig {
+  id: string;
+  title: string;
+  type: "bar" | "line" | "pie" | "area";
+  dataSource: string;
+  xAxis?: string;
+  yAxis?: string;
+  color: string;
+  description?: string;
+  width: "full" | "half";
+  height: "small" | "medium" | "large";
+}
+
+interface AnalyticsData {
+  id: string;
+  name: string;
+  value: number;
+  category: string;
+  date?: string;
+  metadata?: any;
+}
+
+function AnalyticsAdminPanel({ programs }: { programs: Program[] | undefined }) {
+  const [selectedChart, setSelectedChart] = useState<ChartConfig | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingData, setEditingData] = useState<AnalyticsData[]>([]);
+  const [activeTab, setActiveTab] = useState<"charts" | "data">("charts");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Load chart configurations
+  const { data: chartConfigs = [], refetch: refetchCharts } = useQuery<ChartConfig[]>({
+    queryKey: ["/api/analytics/charts"],
+  });
+
+  // Load analytics data
+  const { data: analyticsData = [], refetch: refetchData } = useQuery<AnalyticsData[]>({
+    queryKey: ["/api/analytics/data"],
+    initialData: [],
+  });
+
+  // Save chart configuration
+  const saveChartMutation = useMutation({
+    mutationFn: async (configs: ChartConfig[]) => {
+      const response = await fetch("/api/analytics/charts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ charts: configs }),
+      });
+      if (!response.ok) throw new Error("Failed to save charts");
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchCharts();
+      toast({ description: "Charts updated successfully" });
+    },
+  });
+
+  // Save analytics data
+  const saveDataMutation = useMutation({
+    mutationFn: async (data: AnalyticsData[]) => {
+      const response = await fetch("/api/analytics/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!response.ok) throw new Error("Failed to save data");
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchData();
+      toast({ description: "Analytics data updated successfully" });
+    },
+  });
+
+  const handleCreateChart = () => {
+    const newChart: ChartConfig = {
+      id: Date.now().toString(),
+      title: "New Chart",
+      type: "bar",
+      dataSource: "programs",
+      color: "#8884d8",
+      width: "half",
+      height: "medium",
+      description: "",
+    };
+    setSelectedChart(newChart);
+    setIsCreating(true);
+  };
+
+  const handleSaveChart = (chart: ChartConfig) => {
+    const updatedCharts = isCreating 
+      ? [...chartConfigs, chart]
+      : chartConfigs.map(c => c.id === chart.id ? chart : c);
+    saveChartMutation.mutate(updatedCharts);
+    setSelectedChart(null);
+    setIsCreating(false);
+  };
+
+  const handleDeleteChart = (chartId: string) => {
+    if (confirm("Delete this chart?")) {
+      const updatedCharts = chartConfigs.filter(c => c.id !== chartId);
+      saveChartMutation.mutate(updatedCharts);
+    }
+  };
+
+  const handleAddDataPoint = () => {
+    const newDataPoint: AnalyticsData = {
+      id: Date.now().toString(),
+      name: "New Data Point",
+      value: 0,
+      category: "custom",
+      date: new Date().toISOString().split('T')[0],
+    };
+    setEditingData([...editingData, newDataPoint]);
+  };
+
+  const handleUpdateDataPoint = (id: string, field: keyof AnalyticsData, value: any) => {
+    setEditingData(editingData.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const handleDeleteDataPoint = (id: string) => {
+    setEditingData(editingData.filter(item => item.id !== id));
+  };
+
+  const handleSaveData = () => {
+    saveDataMutation.mutate(editingData);
+  };
+
+  // Initialize editing data
+  React.useEffect(() => {
+    if (analyticsData.length > 0) {
+      setEditingData([...analyticsData]);
+    } else {
+      // Generate initial data from programs
+      const programData: AnalyticsData[] = programs?.map(program => ({
+        id: `program-${program.id}`,
+        name: program.name,
+        value: program.progress,
+        category: program.type,
+        date: program.startDate?.toString().split('T')[0] || new Date().toISOString().split('T')[0],
+        metadata: {
+          participants: program.participants,
+          budget: program.budgetAllocated,
+          status: program.status,
+        }
+      })) || [];
+      setEditingData(programData);
+    }
+  }, [analyticsData, programs]);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Analytics Control Center
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Complete control over analytics charts and data
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant={activeTab === "charts" ? "default" : "outline"}
+                onClick={() => setActiveTab("charts")}
+              >
+                Manage Charts
+              </Button>
+              <Button 
+                variant={activeTab === "data" ? "default" : "outline"}
+                onClick={() => setActiveTab("data")}
+              >
+                Edit Data
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {activeTab === "charts" ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Chart Management</h3>
+                <Button onClick={handleCreateChart}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Chart
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {chartConfigs.map((chart) => (
+                  <Card key={chart.id} className="border-2">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          {chart.type.toUpperCase()}
+                        </Badge>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedChart(chart);
+                              setIsCreating(false);
+                            }}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteChart(chart.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <CardTitle className="text-sm">{chart.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2 text-xs text-muted-foreground">
+                        <div>Source: {chart.dataSource}</div>
+                        <div>Size: {chart.width} × {chart.height}</div>
+                        <div 
+                          className="w-4 h-4 rounded" 
+                          style={{ backgroundColor: chart.color }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {chartConfigs.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No charts configured. Create your first chart to get started.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Analytics Data Editor</h3>
+                <div className="flex gap-2">
+                  <Button onClick={handleAddDataPoint} variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Data Point
+                  </Button>
+                  <Button onClick={handleSaveData}>
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {editingData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Input
+                            value={item.name}
+                            onChange={(e) => handleUpdateDataPoint(item.id, 'name', e.target.value)}
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={item.value}
+                            onChange={(e) => handleUpdateDataPoint(item.id, 'value', Number(e.target.value))}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <select
+                            value={item.category}
+                            onChange={(e) => handleUpdateDataPoint(item.id, 'category', e.target.value)}
+                            className="w-full p-2 border rounded"
+                          >
+                            <option value="CORE">CORE</option>
+                            <option value="RIN">RIN</option>
+                            <option value="AGUKA">AGUKA</option>
+                            <option value="i-ACC">i-ACC</option>
+                            <option value="MCF">MCF</option>
+                            <option value="custom">Custom</option>
+                          </select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={item.date || ''}
+                            onChange={(e) => handleUpdateDataPoint(item.id, 'date', e.target.value)}
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDataPoint(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {editingData.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No data points configured. Add some data to get started.
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Chart Editor Dialog */}
+      {selectedChart && (
+        <Dialog open={!!selectedChart} onOpenChange={() => setSelectedChart(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {isCreating ? "Create New Chart" : "Edit Chart"}
+              </DialogTitle>
+            </DialogHeader>
+            <ChartEditor
+              chart={selectedChart}
+              onSave={handleSaveChart}
+              onCancel={() => setSelectedChart(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+function ChartEditor({ 
+  chart, 
+  onSave, 
+  onCancel 
+}: { 
+  chart: ChartConfig;
+  onSave: (chart: ChartConfig) => void;
+  onCancel: () => void;
+}) {
+  const [config, setConfig] = useState<ChartConfig>(chart);
+
+  const CHART_TYPES = [
+    { value: "bar", label: "Bar Chart" },
+    { value: "line", label: "Line Chart" },
+    { value: "pie", label: "Pie Chart" },
+    { value: "area", label: "Area Chart" },
+  ];
+
+  const DATA_SOURCES = [
+    { value: "programs", label: "Programs Data" },
+    { value: "custom", label: "Custom Data" },
+    { value: "monthlyProgress", label: "Monthly Progress" },
+    { value: "budget", label: "Budget Analysis" },
+    { value: "participants", label: "Participants" },
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(config);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Chart Title</label>
+          <Input
+            value={config.title}
+            onChange={(e) => setConfig({ ...config, title: e.target.value })}
+            placeholder="Enter chart title"
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Chart Type</label>
+          <select
+            value={config.type}
+            onChange={(e) => setConfig({ ...config, type: e.target.value as any })}
+            className="w-full p-2 border rounded"
+          >
+            {CHART_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Data Source</label>
+          <select
+            value={config.dataSource}
+            onChange={(e) => setConfig({ ...config, dataSource: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            {DATA_SOURCES.map((source) => (
+              <option key={source.value} value={source.value}>
+                {source.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Chart Color</label>
+          <Input
+            type="color"
+            value={config.color}
+            onChange={(e) => setConfig({ ...config, color: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Width</label>
+          <select
+            value={config.width}
+            onChange={(e) => setConfig({ ...config, width: e.target.value as any })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="half">Half Width</option>
+            <option value="full">Full Width</option>
+          </select>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Height</label>
+          <select
+            value={config.height}
+            onChange={(e) => setConfig({ ...config, height: e.target.value as any })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Description</label>
+        <textarea
+          value={config.description || ""}
+          onChange={(e) => setConfig({ ...config, description: e.target.value })}
+          placeholder="Chart description"
+          className="w-full p-2 border rounded h-20"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          Save Chart
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -359,29 +852,7 @@ export default function Admin() {
 
           {/* Analytics Control Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Analytics Dashboard Control
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure charts, manage data sources, and control analytics visualization
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <div className="text-lg font-semibold mb-2">Analytics Control Panel</div>
-                  <p className="text-muted-foreground mb-4">
-                    Manage your analytics dashboard settings and chart configurations
-                  </p>
-                  <Button onClick={() => window.location.href = '/analytics'}>
-                    <ChartBar className="w-4 h-4 mr-2" />
-                    View Analytics Dashboard
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AnalyticsAdminPanel programs={programs} />
           </TabsContent>
 
           {/* Users Tab */}

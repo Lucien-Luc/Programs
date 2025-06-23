@@ -120,6 +120,12 @@ export default function Analytics() {
     initialData: [],
   });
 
+  // Load analytics data
+  const { data: customData = [] } = useQuery({
+    queryKey: ["/api/analytics/data"],
+    initialData: [],
+  });
+
   // Initialize with default charts if none exist
   useEffect(() => {
     if (savedConfigs && savedConfigs.length === 0) {
@@ -226,6 +232,7 @@ export default function Analytics() {
       case "statusDistribution": return analyticsData.statusDistribution;
       case "budget": return analyticsData.monthlyProgress;
       case "participants": return analyticsData.monthlyProgress;
+      case "custom": return customData;
       default: return [];
     }
   };
