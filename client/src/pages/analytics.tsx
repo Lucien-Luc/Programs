@@ -62,11 +62,17 @@ interface ChartConfig {
   title: string;
   type: "bar" | "line" | "pie" | "area";
   dataSource: string;
+  programId?: number | "all";
+  metrics?: string[];
   xAxis?: string;
   yAxis?: string;
   color: string;
   description?: string;
-  filters?: Record<string, any>;
+  filters?: {
+    status?: string[];
+    type?: string[];
+    dateRange?: { start: string; end: string };
+  };
   width: "full" | "half";
   height: "small" | "medium" | "large";
 }
@@ -136,6 +142,8 @@ export default function Analytics() {
           title: "Program Progress Analysis",
           type: "bar",
           dataSource: "progressAnalysis",
+          programId: "all",
+          metrics: ["progress"],
           xAxis: "name",
           yAxis: "progress",
           color: "#8884d8",
@@ -148,6 +156,8 @@ export default function Analytics() {
           title: "Budget Utilization by Program",
           type: "line",
           dataSource: "budgetUtilization",
+          programId: "all",
+          metrics: ["utilization"],
           xAxis: "name",
           yAxis: "utilization",
           color: "#82ca9d",
@@ -160,6 +170,8 @@ export default function Analytics() {
           title: "Program Status Distribution",
           type: "pie",
           dataSource: "statusDistribution",
+          programId: "all",
+          metrics: ["count"],
           color: "#ffc658",
           width: "half",
           height: "medium",
@@ -170,6 +182,8 @@ export default function Analytics() {
           title: "Overall Program Performance",
           type: "area",
           dataSource: "programPerformance",
+          programId: "all",
+          metrics: ["score"],
           xAxis: "name",
           yAxis: "score",
           color: "#ff7300",
@@ -225,53 +239,40 @@ export default function Analytics() {
 
 
 
-  // Load real-time data for different sources
-  const { data: progressData } = useQuery({
-    queryKey: ["/api/analytics/data/progressAnalysis"],
-    enabled: chartConfigs.some(c => c.dataSource === "progressAnalysis")
-  });
-
-  const { data: budgetData } = useQuery({
-    queryKey: ["/api/analytics/data/budgetUtilization"],
-    enabled: chartConfigs.some(c => c.dataSource === "budgetUtilization")
-  });
-
-  const { data: participantData } = useQuery({
-    queryKey: ["/api/analytics/data/participantGrowth"],
-    enabled: chartConfigs.some(c => c.dataSource === "participantGrowth")
-  });
-
-  const { data: performanceData } = useQuery({
-    queryKey: ["/api/analytics/data/programPerformance"],
-    enabled: chartConfigs.some(c => c.dataSource === "programPerformance")
-  });
-
-  const { data: statusData } = useQuery({
-    queryKey: ["/api/analytics/data/statusDistribution"],
-    enabled: chartConfigs.some(c => c.dataSource === "statusDistribution")
-  });
-
-  const { data: typeData } = useQuery({
-    queryKey: ["/api/analytics/data/typeComparison"],
-    enabled: chartConfigs.some(c => c.dataSource === "typeComparison")
-  });
-
-  const getChartData = (dataSource: string) => {
-    switch (dataSource) {
-      case "programs": return analyticsData.programs;
-      case "progressAnalysis": return progressData || [];
-      case "budgetUtilization": return budgetData || [];
-      case "participantGrowth": return participantData || [];
-      case "programPerformance": return performanceData || [];
-      case "statusDistribution": return statusData || analyticsData.statusDistribution;
-      case "typeComparison": return typeData || analyticsData.programTypes;
-      case "custom": return customData;
-      default: return [];
+  // Dynamic data loading based on chart configurations
+  const getChartData = (config: ChartConfig) => {
+    const params = new URLSearchParams();
+    
+    if (config.programId && config.programId !== "all") {
+      params.append("programId", config.programId.toString());
     }
+    
+    if (config.filters?.status?.length) {
+      config.filters.status.forEach(s => params.append("status", s));
+    }
+    
+    if (config.filters?.type?.length) {
+      config.filters.type.forEach(t => params.append("type", t));
+    }
+
+    if (config.metrics?.length) {
+      config.metrics.forEach(m => params.append("metrics", m));
+    }
+
+    const queryString = params.toString();
+    const endpoint = `/api/analytics/data/${config.dataSource}${queryString ? `?${queryString}` : ''}`;
+
+    // Use a dynamic query that depends on the config
+    const { data } = useQuery({
+      queryKey: [endpoint],
+      enabled: !!config.dataSource,
+    });
+
+    return data || [];
   };
 
   const renderChart = (config: ChartConfig) => {
-    const data = getChartData(config.dataSource);
+    const data = getChartData(config);
     const height = config.height === "small" ? 200 : config.height === "large" ? 400 : 300;
 
     switch (config.type) {

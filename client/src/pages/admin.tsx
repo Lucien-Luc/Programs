@@ -53,12 +53,19 @@ interface ChartConfig {
   title: string;
   type: "bar" | "line" | "pie" | "area";
   dataSource: string;
+  programId?: number | "all"; // Specific program or all programs
+  metrics: string[]; // Which metrics to display
   xAxis?: string;
   yAxis?: string;
   color: string;
   description?: string;
   width: "full" | "half";
   height: "small" | "medium" | "large";
+  filters?: {
+    status?: string[];
+    type?: string[];
+    dateRange?: { start: string; end: string };
+  };
 }
 
 interface AnalyticsData {
@@ -129,10 +136,13 @@ function AnalyticsAdminPanel({ programs }: { programs: Program[] | undefined }) 
       title: "New Chart",
       type: "bar",
       dataSource: "programs",
+      programId: "all",
+      metrics: ["progress"],
       color: "#8884d8",
       width: "half",
       height: "medium",
       description: "",
+      filters: {}
     };
     setSelectedChart(newChart);
     setIsCreating(true);
@@ -275,6 +285,12 @@ function AnalyticsAdminPanel({ programs }: { programs: Program[] | undefined }) 
                     <CardContent className="pt-0">
                       <div className="space-y-2 text-xs text-muted-foreground">
                         <div>Source: {chart.dataSource}</div>
+                        <div>Program: {
+                          chart.programId === "all" 
+                            ? "All Programs" 
+                            : programs?.find(p => p.id === chart.programId)?.name || "Unknown"
+                        }</div>
+                        <div>Metrics: {chart.metrics?.join(", ") || "None"}</div>
                         <div>Size: {chart.width} × {chart.height}</div>
                         <div 
                           className="w-4 h-4 rounded" 
@@ -396,6 +412,7 @@ function AnalyticsAdminPanel({ programs }: { programs: Program[] | undefined }) 
               chart={selectedChart}
               onSave={handleSaveChart}
               onCancel={() => setSelectedChart(null)}
+              programs={programs}
             />
           </DialogContent>
         </Dialog>
@@ -407,11 +424,13 @@ function AnalyticsAdminPanel({ programs }: { programs: Program[] | undefined }) 
 function ChartEditor({ 
   chart, 
   onSave, 
-  onCancel 
+  onCancel,
+  programs 
 }: { 
   chart: ChartConfig;
   onSave: (chart: ChartConfig) => void;
   onCancel: () => void;
+  programs?: Program[];
 }) {
   const [config, setConfig] = useState<ChartConfig>(chart);
 
@@ -431,6 +450,19 @@ function ChartEditor({
     { value: "statusDistribution", label: "Status Distribution" },
     { value: "typeComparison", label: "Type Comparison" },
     { value: "custom", label: "Custom Data" },
+  ];
+
+  const AVAILABLE_METRICS = [
+    { value: "progress", label: "Progress %" },
+    { value: "participants", label: "Participants Count" },
+    { value: "budgetAllocated", label: "Budget Allocated" },
+    { value: "budgetUsed", label: "Budget Used" },
+    { value: "budgetUtilization", label: "Budget Utilization %" },
+    { value: "efficiency", label: "Efficiency Score" },
+    { value: "status", label: "Status" },
+    { value: "type", label: "Program Type" },
+    { value: "startDate", label: "Start Date" },
+    { value: "endDate", label: "End Date" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -490,6 +522,147 @@ function ChartEditor({
             value={config.color}
             onChange={(e) => setConfig({ ...config, color: e.target.value })}
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Target Program</label>
+          <select
+            value={config.programId || "all"}
+            onChange={(e) => setConfig({ 
+              ...config, 
+              programId: e.target.value === "all" ? "all" : Number(e.target.value)
+            })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="all">All Programs</option>
+            {programs?.map((program) => (
+              <option key={program.id} value={program.id}>
+                {program.name} ({program.type})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Metrics to Display</label>
+          <div className="max-h-32 overflow-y-auto border rounded p-2">
+            {AVAILABLE_METRICS.map((metric) => (
+              <label key={metric.value} className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={config.metrics?.includes(metric.value) || false}
+                  onChange={(e) => {
+                    const currentMetrics = config.metrics || [];
+                    if (e.target.checked) {
+                      setConfig({
+                        ...config,
+                        metrics: [...currentMetrics, metric.value]
+                      });
+                    } else {
+                      setConfig({
+                        ...config,
+                        metrics: currentMetrics.filter(m => m !== metric.value)
+                      });
+                    }
+                  }}
+                />
+                <span>{metric.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="text-sm font-medium">Filters</h4>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Status Filter</label>
+            <div className="space-y-1">
+              {["active", "paused", "completed", "cancelled"].map((status) => (
+                <label key={status} className="flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={config.filters?.status?.includes(status) || false}
+                    onChange={(e) => {
+                      const currentStatuses = config.filters?.status || [];
+                      const newFilters = { ...config.filters };
+                      if (e.target.checked) {
+                        newFilters.status = [...currentStatuses, status];
+                      } else {
+                        newFilters.status = currentStatuses.filter(s => s !== status);
+                      }
+                      setConfig({ ...config, filters: newFilters });
+                    }}
+                  />
+                  <span className="capitalize">{status}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Type Filter</label>
+            <div className="space-y-1">
+              {["CORE", "RIN", "AGUKA", "i-ACC", "MCF"].map((type) => (
+                <label key={type} className="flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={config.filters?.type?.includes(type) || false}
+                    onChange={(e) => {
+                      const currentTypes = config.filters?.type || [];
+                      const newFilters = { ...config.filters };
+                      if (e.target.checked) {
+                        newFilters.type = [...currentTypes, type];
+                      } else {
+                        newFilters.type = currentTypes.filter(t => t !== type);
+                      }
+                      setConfig({ ...config, filters: newFilters });
+                    }}
+                  />
+                  <span>{type}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Date Range</label>
+            <div className="space-y-2">
+              <Input
+                type="date"
+                placeholder="Start Date"
+                value={config.filters?.dateRange?.start || ""}
+                onChange={(e) => setConfig({
+                  ...config,
+                  filters: {
+                    ...config.filters,
+                    dateRange: {
+                      ...config.filters?.dateRange,
+                      start: e.target.value
+                    }
+                  }
+                })}
+              />
+              <Input
+                type="date"
+                placeholder="End Date"
+                value={config.filters?.dateRange?.end || ""}
+                onChange={(e) => setConfig({
+                  ...config,
+                  filters: {
+                    ...config.filters,
+                    dateRange: {
+                      ...config.filters?.dateRange,
+                      end: e.target.value
+                    }
+                  }
+                })}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

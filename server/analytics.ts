@@ -80,11 +80,28 @@ router.post("/charts", async (req, res) => {
   }
 });
 
-// Get real analytics data for charts
+// Get real analytics data for charts with optional program filtering
 router.get("/data/:dataSource", async (req, res) => {
   try {
     const { dataSource } = req.params;
-    const programs = await storage.getPrograms();
+    const { programId, metrics, status, type } = req.query;
+    
+    let programs = await storage.getPrograms();
+    
+    // Apply filters
+    if (programId && programId !== "all") {
+      programs = programs.filter(p => p.id === Number(programId));
+    }
+    
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      programs = programs.filter(p => statusArray.includes(p.status));
+    }
+    
+    if (type) {
+      const typeArray = Array.isArray(type) ? type : [type];
+      programs = programs.filter(p => typeArray.includes(p.type));
+    }
     
     switch (dataSource) {
       case "programs":
