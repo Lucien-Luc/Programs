@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Navigation } from "@/components/navigation";
+import { Navigation, useLanguage } from "@/components/navigation";
+import { useTranslation } from "@/lib/i18n";
 import { ProgramCard } from "@/components/program-card";
 import { ActivityTable } from "@/components/activity-table";
 import { ProgramModal } from "@/components/program-modal";
@@ -13,6 +14,8 @@ import logo from "@assets/logo_1750430330014.png";
 export default function Dashboard() {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const { language } = useLanguage();
+  const { t } = useTranslation(language);
   
   const { data: programs, isLoading: programsLoading, refetch: refetchPrograms } = usePrograms();
   const { data: activities, isLoading: activitiesLoading } = useActivities();
@@ -58,10 +61,10 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-3xl font-bold mb-2 flex items-center">
                   <BarChart3 className="mr-3 w-8 h-8" />
-                  BPN Program Management
+                  {t("welcome_title")}
                 </h1>
                 <p className="text-primary-foreground/80 text-lg">
-                  Good morning! Here's your program management overview.
+                  {t("welcome_message")}
                 </p>
               </div>
             </div>
@@ -72,7 +75,7 @@ export default function Dashboard() {
                 onClick={handleRefresh}
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>Refresh</span>
+                <span>{t("refresh")}</span>
               </Button>
             </div>
           </div>

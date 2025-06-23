@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/components/theme-provider";
+import { useTranslation, type Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,10 +42,32 @@ const themes = [
   { value: "purple", label: "Custom Modern", color: "bg-gradient-to-r from-purple-500 to-purple-600" },
 ];
 
+// Language Context
+const LanguageContext = createContext<{
+  language: Language;
+  setLanguage: (lang: Language) => void;
+}>({
+  language: "en",
+  setLanguage: () => {},
+});
+
+export const useLanguage = () => useContext(LanguageContext);
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguage] = useState<Language>("en");
+  
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
 export function Navigation() {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
-  const [language, setLanguage] = useState("en");
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation(language);
 
   const isActive = (path: string) => location === path;
 
@@ -69,12 +92,12 @@ export function Navigation() {
               className="space-x-2"
             >
               <BarChart3 className="w-4 h-4" />
-              <span>Dashboard</span>
+              <span>{t("dashboard")}</span>
             </Button>
           </Link>
           <Button variant="ghost" className="space-x-2">
             <Calendar className="w-4 h-4" />
-            <span>Calendar</span>
+            <span>{t("calendar")}</span>
           </Button>
           <Link href="/analytics">
             <Button
@@ -82,7 +105,7 @@ export function Navigation() {
               className="space-x-2"
             >
               <ChartBar className="w-4 h-4" />
-              <span>Analytics</span>
+              <span>{t("analytics")}</span>
             </Button>
           </Link>
 
@@ -92,17 +115,17 @@ export function Navigation() {
         <div className="flex items-center space-x-4">
           {/* Language Switcher */}
           <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-16">
+            <SelectTrigger className="w-12 h-12 border-none bg-transparent hover:bg-accent">
               <SelectValue>
                 {languages.find(lang => lang.code === language)?.label}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent align="end">
               {languages.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  <span className="flex items-center gap-2">
-                    {lang.label}
-                    <span className="text-xs text-muted-foreground">{lang.name}</span>
+                <SelectItem key={lang.code} value={lang.code} className="cursor-pointer">
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">{lang.label}</span>
+                    <span className="text-sm">{lang.name}</span>
                   </span>
                 </SelectItem>
               ))}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Navigation } from "@/components/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Navigation, useLanguage } from "@/components/navigation";
+import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,9 +106,8 @@ const DATA_SOURCES = [
 export default function Analytics() {
   const [selectedTimeRange, setSelectedTimeRange] = useState("6months");
   const [chartConfigs, setChartConfigs] = useState<ChartConfig[]>([]);
-  const [editingChart, setEditingChart] = useState<ChartConfig | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const { t } = useTranslation(language);
 
   // Fetch programs data
   const { data: programs = [], isLoading } = useQuery<Program[]>({
@@ -216,38 +216,7 @@ export default function Analytics() {
     ].map(item => ({ ...item, value: item.count })).filter(item => item.count > 0),
   };
 
-  // Save chart configuration
-  const saveChartMutation = useMutation({
-    mutationFn: async (configs: ChartConfig[]) => {
-      const response = await fetch("/api/analytics/charts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ charts: configs }),
-      });
-      if (!response.ok) throw new Error("Failed to save chart configuration");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/charts"] });
-    }
-  });
 
-  const handleSaveChart = (chartConfig: ChartConfig) => {
-    const updatedConfigs = editingChart
-      ? chartConfigs.map(c => c.id === editingChart.id ? chartConfig : c)
-      : [...chartConfigs, { ...chartConfig, id: Date.now().toString() }];
-    
-    setChartConfigs(updatedConfigs);
-    saveChartMutation.mutate(updatedConfigs);
-    setEditingChart(null);
-    setIsCreateDialogOpen(false);
-  };
-
-  const handleDeleteChart = (chartId: string) => {
-    const updatedConfigs = chartConfigs.filter(c => c.id !== chartId);
-    setChartConfigs(updatedConfigs);
-    saveChartMutation.mutate(updatedConfigs);
-  };
 
   const getChartData = (dataSource: string) => {
     switch (dataSource) {
@@ -358,9 +327,9 @@ export default function Analytics() {
             <div className="flex items-center gap-4">
               <ChartBar className="w-12 h-12" />
               <div>
-                <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
+                <h1 className="text-3xl font-bold mb-2">{t("analytics_title")}</h1>
                 <p className="text-blue-100 text-lg">
-                  Comprehensive program analysis and insights
+                  {t("analytics_subtitle")}
                 </p>
               </div>
             </div>
@@ -370,34 +339,16 @@ export default function Analytics() {
                 className="border-white/20 text-white hover:bg-white hover:text-blue-600"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Export Report
+                {t("export_report")}
               </Button>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="border-white/20 text-white hover:bg-white hover:text-blue-600"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Chart
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingChart ? "Edit Chart" : "Create New Chart"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <ChartConfigForm
-                    initialConfig={editingChart}
-                    onSave={handleSaveChart}
-                    onCancel={() => {
-                      setEditingChart(null);
-                      setIsCreateDialogOpen(false);
-                    }}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white hover:text-blue-600"
+                onClick={() => window.location.href = '/admin'}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Manage Charts
+              </Button>
             </div>
           </div>
         </div>
@@ -408,7 +359,7 @@ export default function Analytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Programs</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("total_programs")}</p>
                   <p className="text-2xl font-bold">{analyticsData.programs.length}</p>
                 </div>
                 <Activity className="w-8 h-8 text-blue-600" />
@@ -420,7 +371,7 @@ export default function Analytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Programs</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("active_programs")}</p>
                   <p className="text-2xl font-bold">{analyticsData.activePrograms}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600" />
@@ -432,7 +383,7 @@ export default function Analytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("total_participants")}</p>
                   <p className="text-2xl font-bold">{analyticsData.totalParticipants.toLocaleString()}</p>
                 </div>
                 <Users className="w-8 h-8 text-purple-600" />
@@ -444,7 +395,7 @@ export default function Analytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Budget</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("total_budget")}</p>
                   <p className="text-2xl font-bold">${analyticsData.totalBudget.toLocaleString()}</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-orange-600" />
@@ -470,24 +421,8 @@ export default function Analytics() {
                       </p>
                     )}
                   </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingChart(config);
-                        setIsCreateDialogOpen(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteChart(config.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <div className="text-xs text-muted-foreground">
+                    Admin Only
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -504,11 +439,11 @@ export default function Analytics() {
               <ChartBar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Charts Configured</h3>
               <p className="text-muted-foreground mb-4">
-                Start building your analytics dashboard by creating your first chart
+                Charts can only be configured by administrators. Please contact your admin to set up charts.
               </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Chart
+              <Button onClick={() => window.location.href = '/admin'}>
+                <Settings className="w-4 h-4 mr-2" />
+                Go to Admin Panel
               </Button>
             </CardContent>
           </Card>
