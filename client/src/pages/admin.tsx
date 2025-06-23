@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { 
   Settings, 
   Plus, 
@@ -49,231 +50,7 @@ import {
 } from "lucide-react";
 import type { Program } from "@shared/schema";
 
-interface ChartConfig {
-  id: string;
-  title: string;
-  type: "bar" | "line" | "pie" | "area";
-  dataSource: string;
-  xAxis?: string;
-  yAxis?: string;
-  color: string;
-  description?: string;
-  width: "full" | "half";
-  height: "small" | "medium" | "large";
-}
 
-function AnalyticsAdminPanel() {
-  const [chartConfigs, setChartConfigs] = useState<ChartConfig[]>([]);
-  const [editingChart, setEditingChart] = useState<ChartConfig | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
-
-  // Load chart configurations
-  const { data: savedConfigs, refetch } = useQuery<ChartConfig[]>({
-    queryKey: ["/api/analytics/charts"],
-    initialData: [],
-  });
-
-  useEffect(() => {
-    if (savedConfigs) {
-      setChartConfigs(savedConfigs);
-    }
-  }, [savedConfigs]);
-
-  const saveChartMutation = useMutation({
-    mutationFn: async (configs: ChartConfig[]) => {
-      const response = await fetch("/api/analytics/charts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ charts: configs }),
-      });
-      if (!response.ok) throw new Error("Failed to save chart configuration");
-      return response.json();
-    },
-    onSuccess: () => {
-      refetch();
-      toast({ description: "Chart configuration saved successfully" });
-    },
-    onError: () => {
-      toast({ 
-        variant: "destructive",
-        description: "Failed to save chart configuration" 
-      });
-    }
-  });
-
-  const handleSaveChart = (chartConfig: ChartConfig) => {
-    const updatedConfigs = editingChart
-      ? chartConfigs.map(c => c.id === editingChart.id ? chartConfig : c)
-      : [...chartConfigs, { ...chartConfig, id: Date.now().toString() }];
-    
-    setChartConfigs(updatedConfigs);
-    saveChartMutation.mutate(updatedConfigs);
-    setEditingChart(null);
-    setIsCreateDialogOpen(false);
-  };
-
-  const handleDeleteChart = (chartId: string) => {
-    if (confirm("Are you sure you want to delete this chart?")) {
-      const updatedConfigs = chartConfigs.filter(c => c.id !== chartId);
-      setChartConfigs(updatedConfigs);
-      saveChartMutation.mutate(updatedConfigs);
-    }
-  };
-
-  const handleEditChart = (chart: ChartConfig) => {
-    setEditingChart(chart);
-    setIsCreateDialogOpen(true);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Analytics Dashboard Control
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Configure charts, manage data sources, and control analytics visualization
-              </p>
-            </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Chart
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Chart Management */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Chart Configurations</h3>
-            {chartConfigs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No charts configured. Create your first chart to get started.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {chartConfigs.map((chart) => (
-                  <Card key={chart.id} className="border-2">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs">
-                          {chart.type.toUpperCase()}
-                        </Badge>
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditChart(chart)}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteChart(chart.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      <CardTitle className="text-sm">{chart.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="space-y-2 text-xs text-muted-foreground">
-                        <div>Source: {chart.dataSource}</div>
-                        <div>Size: {chart.width} × {chart.height}</div>
-                        {chart.description && (
-                          <div className="truncate">{chart.description}</div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Data Source Management */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Data Source Control</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Program Data</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Total Programs:</span>
-                      <Badge variant="outline">{programs?.length || 0}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Active Programs:</span>
-                      <Badge variant="outline">
-                        {programs?.filter(p => p.status === 'active').length || 0}
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full mt-2">
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Refresh Data
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Chart Rendering</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Active Charts:</span>
-                      <Badge variant="outline">{chartConfigs.length}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Data Sources:</span>
-                      <Badge variant="outline">
-                        {new Set(chartConfigs.map(c => c.dataSource)).size}
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full mt-2">
-                      <Database className="w-3 h-3 mr-1" />
-                      Export Config
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Chart Creation/Edit Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingChart ? "Edit Chart" : "Create New Chart"}
-            </DialogTitle>
-          </DialogHeader>
-          <ChartConfigForm
-            initialConfig={editingChart}
-            onSave={handleSaveChart}
-            onCancel={() => {
-              setEditingChart(null);
-              setIsCreateDialogOpen(false);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
 
 function ChartConfigForm({ 
   initialConfig, 
@@ -287,13 +64,13 @@ function ChartConfigForm({
   const [config, setConfig] = useState<Partial<ChartConfig>>(
     initialConfig || {
       title: "",
-      type: "bar",
+      type: "bar" as const,
       dataSource: "programs",
       xAxis: "",
       yAxis: "",
       color: "#8884d8",
-      width: "half",
-      height: "medium",
+      width: "half" as const,
+      height: "medium" as const,
       description: "",
     }
   );
@@ -782,7 +559,29 @@ export default function Admin() {
 
           {/* Analytics Control Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <AnalyticsAdminPanel />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Analytics Dashboard Control
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure charts, manage data sources, and control analytics visualization
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <div className="text-lg font-semibold mb-2">Analytics Control Panel</div>
+                  <p className="text-muted-foreground mb-4">
+                    Manage your analytics dashboard settings and chart configurations
+                  </p>
+                  <Button onClick={() => window.location.href = '/analytics'}>
+                    <ChartBar className="w-4 h-4 mr-2" />
+                    View Analytics Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Enhanced Table Builder Tab */}
