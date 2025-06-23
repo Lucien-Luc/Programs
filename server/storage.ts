@@ -1,6 +1,4 @@
-import { programs, activities, tableConfig, users, adminSettings, programSuggestions, columnHeaders, type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings, type ProgramSuggestion, type InsertProgramSuggestion, type ColumnHeader, type InsertColumnHeader } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings, type ProgramSuggestion, type InsertProgramSuggestion, type ColumnHeader, type InsertColumnHeader } from "@shared/schema";
 
 export interface IStorage {
   // Programs
@@ -40,406 +38,347 @@ export interface IStorage {
   updateAdminSetting(key: string, value: string, category: string): Promise<AdminSettings>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class MemStorage implements IStorage {
+  private programs: Program[] = [];
+  private activities: Activity[] = [];
+  private tableConfigs: TableConfig[] = [];
+  private users: User[] = [];
+  private adminSettings: AdminSettings[] = [];
+  private programSuggestions: ProgramSuggestion[] = [];
+  private columnHeaders: ColumnHeader[] = [];
+  private nextId = 1;
+
   constructor() {
-    // Initialize database with sample data if needed
     this.initializeData();
   }
 
-  // Helper function to convert date strings to Date objects
-  private processDateFields(data: any) {
-    const processed = { ...data };
-    if (processed.startDate && typeof processed.startDate === 'string') {
-      processed.startDate = new Date(processed.startDate);
-    }
-    if (processed.endDate && typeof processed.endDate === 'string') {
-      processed.endDate = new Date(processed.endDate);
-    }
-    return processed;
-  }
+  private async initializeData() {
+    // Initialize with sample data
+    this.programs = [
+      {
+        id: 1,
+        name: "CORE Program",
+        type: "CORE",
+        status: "active",
+        progress: 75,
+        participants: 150,
+        budgetAllocated: 500000,
+        budgetUsed: 200000,
+        startDate: new Date("2024-01-15"),
+        endDate: new Date("2024-12-15"),
+        description: "Comprehensive community development program focusing on education and healthcare improvements.",
+        color: "#4A90A4",
+        icon: "bullseye",
+        image: null,
+        imageUrl: null,
+        tags: ["education", "healthcare"],
+        category: "community development",
+        priority: "high",
+        metadata: { coordinator: "Sarah Johnson", location: "Northern Region" },
+        createdAt: new Date("2024-01-01"),
+        updatedAt: new Date("2024-06-01")
+      }
+    ];
 
-  async initializeData() {
-    try {
-      // Check if data already exists
-      const existingPrograms = await db.select().from(programs).limit(1);
-      if (existingPrograms.length > 0) return; // Data already initialized
+    this.activities = [
+      {
+        id: 1,
+        programId: 1,
+        type: "Training Session",
+        description: "Community health worker training",
+        date: new Date("2024-06-15"),
+        status: "completed",
+        location: "Community Center A",
+        participants: 25,
+        coordinator: "Dr. Smith",
+        notes: "Successful training session with high engagement",
+        createdAt: new Date("2024-06-01"),
+        updatedAt: new Date("2024-06-15")
+      }
+    ];
 
-      // Create default programs
-      const defaultPrograms: InsertProgram[] = [
-        {
-          name: "CORE Program",
-          type: "CORE",
-          description: "Core program for capacity building and training",
-          status: "active",
-          progress: 75,
-          participants: 245,
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
-          budgetAllocated: 500000,
-          budgetUsed: 390000,
-          color: "#4A90A4",
-          icon: "bullseye"
-        },
-        {
-          name: "RIN Program",
-          type: "RIN",
-          description: "Refugee Integration Network program",
-          status: "active",
-          progress: 60,
-          participants: 189,
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
-          budgetAllocated: 350000,
-          budgetUsed: 210000,
-          color: "#E67E22",
-          icon: "handshake"
-        },
-        {
-          name: "AGUKA Program",
-          type: "AGUKA",
-          description: "Agricultural development and business growth",
-          status: "active",
-          progress: 45,
-          participants: 156,
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
-          budgetAllocated: 400000,
-          budgetUsed: 180000,
-          color: "#27AE60",
-          icon: "seedling"
-        },
-        {
-          name: "i-ACC Program",
-          type: "i-ACC",
-          description: "Innovation accelerator for startups",
-          status: "active",
-          progress: 30,
-          participants: 32,
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
-          budgetAllocated: 250000,
-          budgetUsed: 75000,
-          color: "#8E44AD",
-          icon: "rocket"
-        },
-        {
-          name: "MCF (Grow2Scale)",
-          type: "MCF",
-          description: "Market Connect Fund for scaling businesses",
-          status: "active",
-          progress: 85,
-          participants: 18,
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
-          budgetAllocated: 600000,
-          budgetUsed: 510000,
-          color: "#3498DB",
-          icon: "chart-line"
-        }
-      ];
-
-      await db.insert(programs).values(defaultPrograms);
-
-      // Create default activities
-      const defaultActivities: InsertActivity[] = [
-        {
-          programId: 1,
-          type: "Training Session",
-          description: "Capacity building workshop",
-          date: new Date("2025-06-18"),
-          status: "completed",
-          details: "25 participants"
-        },
-        {
-          programId: 2,
-          type: "Coaching Session",
-          description: "Business mentoring",
-          date: new Date("2025-06-17"),
-          status: "in_progress",
-          details: "Refugee entrepreneurs"
-        },
-        {
-          programId: 3,
-          type: "Business Review",
-          description: "Quarterly assessment",
-          date: new Date("2025-06-16"),
-          status: "scheduled",
-          details: "Growth assessment"
-        },
-        {
-          programId: 4,
-          type: "Pitch Event",
-          description: "Startup showcase",
-          date: new Date("2025-06-15"),
-          status: "completed",
-          details: "8 startups presented"
-        },
-        {
-          programId: 5,
-          type: "Quarterly Review",
-          description: "Financial reporting",
-          date: new Date("2025-06-14"),
-          status: "pending",
-          details: "Financial reporting"
-        }
-      ];
-
-      await db.insert(activities).values(defaultActivities);
-
-      // Create default table config
-      await db.insert(tableConfig).values({
-        tableName: "recent_activity",
-        columns: [
-          { key: "program", label: "Program", type: "text" },
-          { key: "activityType", label: "Activity Type", type: "text" },
-          { key: "date", label: "Date", type: "date" },
-          { key: "status", label: "Status", type: "status" },
-          { key: "details", label: "Details", type: "text" },
-          { key: "actions", label: "Actions", type: "actions" }
-        ],
-        data: []
-      });
-
-      // Create admin user
-      await db.insert(users).values({
+    this.users = [
+      {
+        id: 1,
         username: "admin",
-        password: "admin123", // In production, this should be hashed
-        role: "admin"
-      });
+        password: "admin123",
+        role: "admin",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
 
-      // Create default admin settings
-      const defaultSettings = [
-        { key: "dashboard_title", value: "BPN Program Management", category: "ui" },
-        { key: "welcome_message", value: "Good morning! Here's your program management overview.", category: "ui" },
-        { key: "default_theme", value: "default", category: "theme" },
-        { key: "show_timeline", value: "false", category: "ui" },
-        { key: "items_per_page", value: "5", category: "ui" },
-      ];
+    this.adminSettings = [
+      { id: 1, key: "dashboard_title", value: "BPN Program Management", category: "ui", createdAt: new Date(), updatedAt: new Date() },
+      { id: 2, key: "welcome_message", value: "Good morning! Here's your program management overview.", category: "ui", createdAt: new Date(), updatedAt: new Date() },
+      { id: 3, key: "default_theme", value: "default", category: "theme", createdAt: new Date(), updatedAt: new Date() },
+      { id: 4, key: "show_timeline", value: "false", category: "ui", createdAt: new Date(), updatedAt: new Date() },
+      { id: 5, key: "items_per_page", value: "5", category: "ui", createdAt: new Date(), updatedAt: new Date() }
+    ];
 
-      await db.insert(adminSettings).values(defaultSettings);
+    this.columnHeaders = [
+      { id: 1, tableName: 'activities', columnKey: 'program', displayName: 'Program', isVisible: true, sortOrder: 0, width: '150px', alignment: 'left', createdAt: new Date(), updatedAt: new Date() },
+      { id: 2, tableName: 'activities', columnKey: 'activity_type', displayName: 'Activity Type', isVisible: true, sortOrder: 1, width: '150px', alignment: 'left', createdAt: new Date(), updatedAt: new Date() },
+      { id: 3, tableName: 'activities', columnKey: 'date', displayName: 'Date', isVisible: true, sortOrder: 2, width: '120px', alignment: 'left', createdAt: new Date(), updatedAt: new Date() },
+      { id: 4, tableName: 'activities', columnKey: 'status', displayName: 'Status', isVisible: true, sortOrder: 3, width: '100px', alignment: 'center', createdAt: new Date(), updatedAt: new Date() },
+      { id: 5, tableName: 'activities', columnKey: 'details', displayName: 'Details', isVisible: true, sortOrder: 4, width: '200px', alignment: 'left', createdAt: new Date(), updatedAt: new Date() },
+      { id: 6, tableName: 'activities', columnKey: 'actions', displayName: 'Actions', isVisible: true, sortOrder: 5, width: '100px', alignment: 'center', createdAt: new Date(), updatedAt: new Date() }
+    ];
 
-      // Create default program suggestions
-      const defaultSuggestions = [
-        {
-          keyword: "education",
-          name: "Basic Education Enhancement",
-          type: "CORE",
-          description: "Improving literacy and numeracy skills in rural communities",
-          tags: ["education", "literacy", "rural"],
-          category: "education",
-          priority: "high",
-          defaultColor: "#4A90A4",
-          defaultIcon: "bullseye",
-          metadata: { sector: "education", target: "rural communities" }
-        },
-        {
-          keyword: "health",
-          name: "Community Health Program",
-          type: "RIN",
-          description: "Strengthening healthcare delivery systems",
-          tags: ["health", "community", "healthcare"],
-          category: "health",
-          priority: "high",
-          defaultColor: "#E67E22",
-          defaultIcon: "handshake",
-          metadata: { sector: "health", target: "communities" }
-        },
-        {
-          keyword: "agriculture",
-          name: "Sustainable Agriculture Initiative",
-          type: "AGUKA",
-          description: "Promoting sustainable farming practices and food security",
-          tags: ["agriculture", "sustainability", "food"],
-          category: "agriculture",
-          priority: "medium",
-          defaultColor: "#27AE60",
-          defaultIcon: "seedling",
-          metadata: { sector: "agriculture", target: "farmers" }
-        }
-      ];
+    this.programSuggestions = [
+      {
+        id: 1,
+        keyword: "education",
+        name: "Basic Education Enhancement",
+        type: "CORE",
+        description: "Improving literacy and numeracy skills in rural communities",
+        tags: ["education", "literacy", "rural"],
+        category: "education",
+        priority: "high",
+        defaultColor: "#4A90A4",
+        defaultIcon: "bullseye",
+        metadata: { sector: "education", target: "rural communities" },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
 
-      await db.insert(programSuggestions).values(defaultSuggestions);
-    } catch (error) {
-      console.error("Error initializing data:", error);
-    }
+    this.nextId = 10;
   }
 
   // Programs
   async getPrograms(): Promise<Program[]> {
-    return await db.select().from(programs);
+    return [...this.programs];
   }
 
   async getProgram(id: number): Promise<Program | undefined> {
-    const [program] = await db.select().from(programs).where(eq(programs.id, id));
-    return program;
+    return this.programs.find(p => p.id === id);
   }
 
   async createProgram(program: InsertProgram): Promise<Program> {
-    const processedProgram = this.processDateFields(program);
-    const [newProgram] = await db.insert(programs).values(processedProgram).returning();
+    const newProgram: Program = {
+      ...program,
+      id: this.nextId++,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.programs.push(newProgram);
     return newProgram;
   }
 
   async updateProgram(id: number, program: Partial<InsertProgram>): Promise<Program | undefined> {
-    const processedProgram = this.processDateFields(program);
-    const [updated] = await db.update(programs)
-      .set({ ...processedProgram, updatedAt: new Date() })
-      .where(eq(programs.id, id))
-      .returning();
-    return updated;
+    const index = this.programs.findIndex(p => p.id === id);
+    if (index === -1) return undefined;
+    
+    this.programs[index] = {
+      ...this.programs[index],
+      ...program,
+      updatedAt: new Date()
+    };
+    return this.programs[index];
   }
 
   async deleteProgram(id: number): Promise<boolean> {
-    const result = await db.delete(programs).where(eq(programs.id, id));
-    return (result.rowCount || 0) > 0;
+    const index = this.programs.findIndex(p => p.id === id);
+    if (index === -1) return false;
+    
+    this.programs.splice(index, 1);
+    return true;
   }
 
   // Activities
   async getActivities(): Promise<Activity[]> {
-    return await db.select().from(activities);
+    return [...this.activities];
   }
 
   async getActivitiesByProgram(programId: number): Promise<Activity[]> {
-    return await db.select().from(activities).where(eq(activities.programId, programId));
+    return this.activities.filter(a => a.programId === programId);
   }
 
   async createActivity(activity: InsertActivity): Promise<Activity> {
-    const [newActivity] = await db.insert(activities).values(activity).returning();
+    const newActivity: Activity = {
+      ...activity,
+      id: this.nextId++,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.activities.push(newActivity);
     return newActivity;
   }
 
   async updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined> {
-    const [updated] = await db.update(activities)
-      .set(activity)
-      .where(eq(activities.id, id))
-      .returning();
-    return updated;
+    const index = this.activities.findIndex(a => a.id === id);
+    if (index === -1) return undefined;
+    
+    this.activities[index] = {
+      ...this.activities[index],
+      ...activity,
+      updatedAt: new Date()
+    };
+    return this.activities[index];
   }
 
   async deleteActivity(id: number): Promise<boolean> {
-    const result = await db.delete(activities).where(eq(activities.id, id));
-    return (result.rowCount || 0) > 0;
+    const index = this.activities.findIndex(a => a.id === id);
+    if (index === -1) return false;
+    
+    this.activities.splice(index, 1);
+    return true;
   }
 
   // Table Configuration
   async getTableConfig(tableName: string): Promise<TableConfig | undefined> {
-    const [config] = await db.select().from(tableConfig).where(eq(tableConfig.tableName, tableName));
-    return config;
+    return this.tableConfigs.find(tc => tc.tableName === tableName);
   }
 
   async updateTableConfig(config: InsertTableConfig): Promise<TableConfig> {
-    const [updated] = await db.insert(tableConfig)
-      .values(config)
-      .onConflictDoUpdate({
-        target: tableConfig.tableName,
-        set: {
-          columns: config.columns,
-          data: config.data,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return updated;
+    const index = this.tableConfigs.findIndex(tc => tc.tableName === config.tableName);
+    
+    if (index === -1) {
+      const newConfig: TableConfig = {
+        ...config,
+        id: this.nextId++,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.tableConfigs.push(newConfig);
+      return newConfig;
+    } else {
+      this.tableConfigs[index] = {
+        ...this.tableConfigs[index],
+        ...config,
+        updatedAt: new Date()
+      };
+      return this.tableConfigs[index];
+    }
   }
 
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, parseInt(id)));
-    return user;
+    return this.users.find(u => u.id === parseInt(id));
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    return this.users.find(u => u.username === username);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db.insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.username,
-        set: userData,
-      })
-      .returning();
-    return user;
+    const existingIndex = this.users.findIndex(u => u.username === userData.username);
+    
+    if (existingIndex === -1) {
+      const newUser: User = {
+        ...userData,
+        id: this.nextId++,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.users.push(newUser);
+      return newUser;
+    } else {
+      this.users[existingIndex] = {
+        ...this.users[existingIndex],
+        ...userData,
+        updatedAt: new Date()
+      };
+      return this.users[existingIndex];
+    }
   }
 
   // Admin Settings
   async getAdminSettings(category?: string): Promise<AdminSettings[]> {
     if (category) {
-      return await db.select().from(adminSettings).where(eq(adminSettings.category, category));
+      return this.adminSettings.filter(s => s.category === category);
     }
-    return await db.select().from(adminSettings);
+    return [...this.adminSettings];
   }
 
   async updateAdminSetting(key: string, value: string, category: string): Promise<AdminSettings> {
-    const [setting] = await db.insert(adminSettings)
-      .values({ key, value, category })
-      .onConflictDoUpdate({
-        target: adminSettings.key,
-        set: { value, updatedAt: new Date() },
-      })
-      .returning();
-    return setting;
+    const index = this.adminSettings.findIndex(s => s.key === key);
+    
+    if (index === -1) {
+      const newSetting: AdminSettings = {
+        id: this.nextId++,
+        key,
+        value,
+        category,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.adminSettings.push(newSetting);
+      return newSetting;
+    } else {
+      this.adminSettings[index] = {
+        ...this.adminSettings[index],
+        value,
+        updatedAt: new Date()
+      };
+      return this.adminSettings[index];
+    }
   }
 
   // Column Headers Management
   async getColumnHeaders(tableName: string): Promise<ColumnHeader[]> {
-    const headers = await db.select().from(columnHeaders).where(eq(columnHeaders.tableName, tableName));
-    
-    // If no headers exist, create default ones for the activities table
-    if (headers.length === 0 && tableName === 'activities') {
-      const defaultHeaders = [
-        { tableName: 'activities', columnKey: 'program', displayName: 'Program', sortOrder: 0 },
-        { tableName: 'activities', columnKey: 'activity_type', displayName: 'Activity Type', sortOrder: 1 },
-        { tableName: 'activities', columnKey: 'date', displayName: 'Date', sortOrder: 2 },
-        { tableName: 'activities', columnKey: 'status', displayName: 'Status', sortOrder: 3 },
-        { tableName: 'activities', columnKey: 'details', displayName: 'Details', sortOrder: 4 },
-        { tableName: 'activities', columnKey: 'actions', displayName: 'Actions', sortOrder: 5 },
-      ];
-      
-      for (const header of defaultHeaders) {
-        await db.insert(columnHeaders).values(header);
-      }
-      
-      return await db.select().from(columnHeaders).where(eq(columnHeaders.tableName, tableName));
-    }
-    
-    return headers;
+    return this.columnHeaders.filter(ch => ch.tableName === tableName);
   }
 
   async updateColumnHeader(config: InsertColumnHeader): Promise<ColumnHeader> {
-    const [result] = await db.insert(columnHeaders)
-      .values(config)
-      .onConflictDoUpdate({
-        target: [columnHeaders.tableName, columnHeaders.columnKey],
-        set: { ...config, updatedAt: new Date() },
-      })
-      .returning();
-    return result;
+    const index = this.columnHeaders.findIndex(ch => 
+      ch.tableName === config.tableName && ch.columnKey === config.columnKey
+    );
+    
+    if (index === -1) {
+      const newHeader: ColumnHeader = {
+        ...config,
+        id: this.nextId++,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.columnHeaders.push(newHeader);
+      return newHeader;
+    } else {
+      this.columnHeaders[index] = {
+        ...this.columnHeaders[index],
+        ...config,
+        updatedAt: new Date()
+      };
+      return this.columnHeaders[index];
+    }
   }
 
   // Program Suggestions
   async getProgramSuggestions(keyword?: string): Promise<ProgramSuggestion[]> {
     if (keyword) {
-      return await db.select().from(programSuggestions)
-        .where(eq(programSuggestions.keyword, keyword));
+      return this.programSuggestions.filter(ps => 
+        ps.keyword.includes(keyword) || 
+        ps.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        ps.tags.some(tag => tag.includes(keyword))
+      );
     }
-    return await db.select().from(programSuggestions);
+    return [...this.programSuggestions];
   }
 
   async createProgramSuggestion(suggestion: InsertProgramSuggestion): Promise<ProgramSuggestion> {
-    const [result] = await db.insert(programSuggestions).values(suggestion).returning();
-    return result;
+    const newSuggestion: ProgramSuggestion = {
+      ...suggestion,
+      id: this.nextId++,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.programSuggestions.push(newSuggestion);
+    return newSuggestion;
   }
 
   async updateProgramSuggestion(id: number, suggestion: Partial<InsertProgramSuggestion>): Promise<ProgramSuggestion | undefined> {
-    const [result] = await db.update(programSuggestions)
-      .set(suggestion)
-      .where(eq(programSuggestions.id, id))
-      .returning();
-    return result;
+    const index = this.programSuggestions.findIndex(ps => ps.id === id);
+    if (index === -1) return undefined;
+    
+    this.programSuggestions[index] = {
+      ...this.programSuggestions[index],
+      ...suggestion,
+      updatedAt: new Date()
+    };
+    return this.programSuggestions[index];
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

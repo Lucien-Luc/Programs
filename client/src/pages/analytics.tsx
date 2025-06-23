@@ -239,36 +239,31 @@ export default function Analytics() {
 
 
 
-  // Dynamic data loading based on chart configurations
+  // Generate static data for charts since we're using in-memory storage
   const getChartData = (config: ChartConfig) => {
-    const params = new URLSearchParams();
-    
-    if (config.programId && config.programId !== "all") {
-      params.append("programId", config.programId.toString());
+    // Return mock data based on chart type and data source
+    switch (config.dataSource) {
+      case "programs":
+        return analyticsData.programs.map(p => ({
+          name: p.name,
+          value: p.progress,
+          budget: p.budgetAllocated || 0,
+          participants: p.participants,
+          status: p.status
+        }));
+      
+      case "monthly_progress":
+        return analyticsData.monthlyProgress;
+      
+      case "program_types":
+        return analyticsData.programTypes;
+      
+      case "status_distribution":
+        return analyticsData.statusDistribution;
+      
+      default:
+        return [];
     }
-    
-    if (config.filters?.status?.length) {
-      config.filters.status.forEach(s => params.append("status", s));
-    }
-    
-    if (config.filters?.type?.length) {
-      config.filters.type.forEach(t => params.append("type", t));
-    }
-
-    if (config.metrics?.length) {
-      config.metrics.forEach(m => params.append("metrics", m));
-    }
-
-    const queryString = params.toString();
-    const endpoint = `/api/analytics/data/${config.dataSource}${queryString ? `?${queryString}` : ''}`;
-
-    // Use a dynamic query that depends on the config
-    const { data } = useQuery({
-      queryKey: [endpoint],
-      enabled: !!config.dataSource,
-    });
-
-    return data || [];
   };
 
   const renderChart = (config: ChartConfig) => {
@@ -281,11 +276,11 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={config.xAxis} />
+              <XAxis dataKey={config.xAxis || "name"} />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey={config.yAxis} fill={config.color} />
+              <Bar dataKey={config.yAxis || "value"} fill={config.color} />
             </BarChart>
           </ResponsiveContainer>
         );
@@ -332,11 +327,11 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height={height}>
             <AreaChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={config.xAxis} />
+              <XAxis dataKey={config.xAxis || "name"} />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Area type="monotone" dataKey={config.yAxis} stroke={config.color} fill={config.color} fillOpacity={0.6} />
+              <Area type="monotone" dataKey={config.yAxis || "value"} stroke={config.color} fill={config.color} fillOpacity={0.6} />
             </AreaChart>
           </ResponsiveContainer>
         );
