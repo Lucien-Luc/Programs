@@ -21,11 +21,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { usePrograms, useDeleteProgram } from "@/hooks/use-programs";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
   Plus, 
@@ -39,10 +39,10 @@ import {
   FileText,
   Database,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Image
 } from "lucide-react";
 import type { Program } from "@shared/schema";
-import logo from "@assets/logo_1750430330014.png";
 
 export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,6 +52,7 @@ export default function Admin() {
   const { isAuthenticated, isAdmin, logout, isLoading: authLoading } = useAuth();
   const { data: programs, isLoading } = usePrograms();
   const deleteProgram = useDeleteProgram();
+  const { toast } = useToast();
 
   const handleLoginSuccess = () => {
     // Component will re-render with authenticated state
@@ -81,7 +82,15 @@ export default function Admin() {
 
   const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this program?")) {
-      await deleteProgram.mutateAsync(id);
+      try {
+        await deleteProgram.mutateAsync(id);
+        toast({ description: "Program deleted successfully" });
+      } catch (error) {
+        toast({ 
+          variant: "destructive",
+          description: "Failed to delete program" 
+        });
+      }
     }
   };
 
@@ -89,6 +98,37 @@ export default function Admin() {
     setFormOpen(false);
     setSelectedProgram(null);
   };
+
+  // Transform programs data for enhanced table
+  const programTableData = programs?.map(program => ({
+    id: program.id,
+    name: program.name,
+    type: program.type,
+    description: program.description || "",
+    status: program.status,
+    progress: program.progress,
+    participants: program.participants,
+    budgetAllocated: program.budgetAllocated || 0,
+    budgetUsed: program.budgetUsed || 0,
+    color: program.color,
+    image: program.imageUrl || program.image || "",
+    category: program.category || "",
+    priority: program.priority || "medium",
+    startDate: program.startDate,
+    endDate: program.endDate,
+  })) || [];
+
+  const customTableActions = [
+    {
+      label: "View",
+      icon: Activity,
+      onClick: (row: any) => {
+        const program = programs?.find(p => p.id === row.id);
+        if (program) handleEdit(program);
+      },
+      variant: "outline" as const,
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,94 +138,120 @@ export default function Admin() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <img src={logo} alt="BPN Logo" className="h-12 w-12 object-contain" />
+            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center">
-                <Settings className="mr-3 w-8 h-8" />
-                Admin Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Manage programs, activities, and dashboard configuration
-              </p>
+              <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage programs and system configurations</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Dialog open={formOpen} onOpenChange={setFormOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setSelectedProgram(null)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Program
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {selectedProgram ? "Edit Program" : "Create New Program"}
-                  </DialogTitle>
-                </DialogHeader>
-                <ProgramForm 
-                  program={selectedProgram} 
-                  onClose={handleFormClose}
-                />
-              </DialogContent>
-            </Dialog>
-            <Button
-              variant="outline"
-              onClick={logout}
-              className="flex items-center gap-2 text-red-600 hover:text-red-700"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Program
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="programs" className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Programs</p>
+                  <p className="text-2xl font-bold">{programs?.length || 0}</p>
+                </div>
+                <FileText className="w-8 h-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Active Programs</p>
+                  <p className="text-2xl font-bold">
+                    {programs?.filter(p => p.status === 'active').length || 0}
+                  </p>
+                </div>
+                <Activity className="w-8 h-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
+                  <p className="text-2xl font-bold">
+                    {programs?.reduce((sum, p) => sum + (p.participants || 0), 0) || 0}
+                  </p>
+                </div>
+                <Users className="w-8 h-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Budget</p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(programs?.reduce((sum, p) => sum + (p.budgetAllocated || 0), 0) || 0)}
+                  </p>
+                </div>
+                <Database className="w-8 h-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Tabs defaultValue="programs" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="programs" className="flex items-center space-x-2">
-              <Database className="w-4 h-4" />
-              <span>Programs</span>
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="flex items-center space-x-2">
-              <Activity className="w-4 h-4" />
-              <span>Activities</span>
-            </TabsTrigger>
-            <TabsTrigger value="table-builder" className="flex items-center space-x-2">
-              <FileText className="w-4 h-4" />
-              <span>Table Builder</span>
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center space-x-2">
-              <Users className="w-4 h-4" />
-              <span>Users</span>
-            </TabsTrigger>
+            <TabsTrigger value="programs">Programs</TabsTrigger>
+            <TabsTrigger value="table-builder">Enhanced Table</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           {/* Programs Tab */}
-          <TabsContent value="programs">
+          <TabsContent value="programs" className="space-y-6">
+            {/* Search */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search programs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Programs Table */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Program Management</CardTitle>
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Search programs..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <CardTitle>Program Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Program</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Progress</TableHead>
                         <TableHead>Participants</TableHead>
@@ -198,51 +264,61 @@ export default function Admin() {
                       {filteredPrograms.map((program) => (
                         <TableRow key={program.id}>
                           <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div 
-                                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                style={{ backgroundColor: program.color }}
-                              >
-                                <span className="text-white text-xs font-bold">
-                                  {program.type.charAt(0)}
-                                </span>
-                              </div>
+                            <div className="flex items-center gap-3">
+                              {(program.imageUrl || program.image) ? (
+                                <img 
+                                  src={program.imageUrl || program.image || ""} 
+                                  alt={program.name}
+                                  className="w-10 h-10 object-cover rounded-lg"
+                                />
+                              ) : (
+                                <div 
+                                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                                  style={{ backgroundColor: program.color }}
+                                >
+                                  <Image className="h-5 w-5 text-white" />
+                                </div>
+                              )}
                               <div>
                                 <div className="font-medium">{program.name}</div>
-                                <div className="text-sm text-muted-foreground">{program.type}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {program.description ? program.description.substring(0, 50) + "..." : "No description"}
+                                </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
+                            <Badge variant="outline">{program.type}</Badge>
+                          </TableCell>
+                          <TableCell>
                             <Badge 
-                              variant="secondary"
-                              className={program.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
+                              variant={program.status === 'active' ? 'default' : 'secondary'}
                             >
                               {program.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-200 rounded-full h-2">
                                 <div 
-                                  className="h-2 rounded-full"
+                                  className="h-2 rounded-full transition-all duration-300"
                                   style={{ 
                                     width: `${program.progress}%`,
                                     backgroundColor: program.color 
                                   }}
                                 />
                               </div>
-                              <span className="text-sm font-medium">{program.progress}%</span>
+                              <span className="text-sm">{program.progress}%</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell>
                             {program.participants}
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              <div>{formatCurrency(program.budgetUsed)}</div>
+                              <div>{formatCurrency(program.budgetUsed || 0)}</div>
                               <div className="text-muted-foreground">
-                                of {formatCurrency(program.budgetAllocated)}
+                                of {formatCurrency(program.budgetAllocated || 0)}
                               </div>
                             </div>
                           </TableCell>
@@ -268,39 +344,42 @@ export default function Admin() {
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
-                                <Copy className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Archive className="w-4 h-4" />
-                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Activities Tab */}
-          <TabsContent value="activities">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Activity Management</h3>
-                <p className="text-muted-foreground">
-                  Activity management interface will be implemented here.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Table Builder Tab */}
+          {/* Enhanced Table Builder Tab */}
           <TabsContent value="table-builder">
-            <TableBuilder />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Enhanced Table Builder
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Fully customizable table with sortable columns, inline editing, and advanced features
+                </p>
+              </CardHeader>
+              <CardContent>
+                <EnhancedTableBuilder
+                  tableName="programs"
+                  data={programTableData}
+                  onEdit={(row) => {
+                    const program = programs?.find(p => p.id === row.id);
+                    if (program) handleEdit(program);
+                  }}
+                  onDelete={(id) => handleDelete(Number(id))}
+                  customActions={customTableActions}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Users Tab */}
@@ -315,7 +394,42 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Settings className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">System Settings</h3>
+                <p className="text-muted-foreground">
+                  System configuration options will be available here.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        {/* Program Form Dialog */}
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedProgram ? (
+                  <>
+                    <Edit className="h-5 w-5" />
+                    Edit Program: {selectedProgram.name}
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5" />
+                    Create New Program
+                  </>
+                )}
+              </DialogTitle>
+            </DialogHeader>
+            <ProgramForm program={selectedProgram} onClose={handleFormClose} />
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
