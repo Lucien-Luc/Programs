@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Navigation, useLanguage } from "@/components/navigation";
-import { useTranslation } from "@/lib/i18n";
+import { Navigation } from "@/components/navigation";
+import { useLanguage } from "@/lib/LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,8 +113,7 @@ const DATA_SOURCES = [
 export default function Analytics() {
   const [selectedTimeRange, setSelectedTimeRange] = useState("6months");
   const [chartConfigs, setChartConfigs] = useState<ChartConfig[]>([]);
-  const { language } = useLanguage();
-  const { t } = useTranslation(language);
+  const { t } = useLanguage();
 
   // Fetch programs data
   const { data: programs = [], isLoading } = useQuery<Program[]>({
@@ -363,9 +362,9 @@ export default function Analytics() {
             <div className="flex items-center gap-4">
               <ChartBar className="w-12 h-12" />
               <div>
-                <h1 className="text-3xl font-bold mb-2">{t("analytics_title")}</h1>
+                <h1 className="text-3xl font-bold mb-2">{t("analytics")}</h1>
                 <p className="text-blue-100 text-lg">
-                  {t("analytics_subtitle")}
+                  {t("welcome_message")}
                 </p>
               </div>
             </div>
@@ -375,7 +374,7 @@ export default function Analytics() {
                 className="border-white/20 text-white hover:bg-white hover:text-blue-600"
               >
                 <Download className="w-4 h-4 mr-2" />
-                {t ? t("export_report") : "Export Report"}
+                Export Report
               </Button>
               <Button 
                 variant="outline" 

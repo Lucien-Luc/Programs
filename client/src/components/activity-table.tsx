@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/components/navigation";
-import { useTranslation } from "@/lib/i18n";
+import { useLanguage } from "@/lib/LanguageProvider";
 import {
   Table,
   TableBody,
@@ -66,8 +65,7 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(activities.length / itemsPerPage);
-  const { language } = useLanguage();
-  const { t } = useTranslation(language);
+  const { t } = useLanguage();
   
   const paginatedActivities = activities.slice(
     (currentPage - 1) * itemsPerPage,

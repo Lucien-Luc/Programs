@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Navigation, useLanguage } from "@/components/navigation";
-import { useTranslation } from "@/lib/i18n";
+import { Navigation } from "@/components/navigation";
+import { useLanguage } from "@/lib/LanguageProvider";
 import { ProgramCard } from "@/components/program-card";
 import { ActivityTable } from "@/components/activity-table";
 import { ProgramModal } from "@/components/program-modal";
@@ -14,8 +14,7 @@ import logo from "@assets/logo_1750430330014.png";
 export default function Dashboard() {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const { language } = useLanguage();
-  const { t } = useTranslation(language);
+  const { t } = useLanguage();
   
   const { data: programs, isLoading: programsLoading, refetch: refetchPrograms } = usePrograms();
   const { data: activities, isLoading: activitiesLoading } = useActivities();

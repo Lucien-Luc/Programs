@@ -1,7 +1,7 @@
-import { useState, createContext, useContext } from "react";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/components/theme-provider";
-import { useTranslation, type Language } from "@/lib/i18n";
+import { useLanguage } from "@/lib/LanguageProvider";
+import type { Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,12 +24,14 @@ import {
   Settings, 
   Palette,
   ChevronDown,
-  LogOut
+  LogOut,
+  Globe
 } from "lucide-react";
 import logo from "@assets/logo_1750430330014.png";
 
 const languages = [
   { code: "en", label: "🇬🇧", name: "English" },
+  { code: "es", label: "🇪🇸", name: "Español" },
   { code: "fr", label: "🇫🇷", name: "Français" },
   { code: "rw", label: "🇷🇼", name: "Kinyarwanda" },
   { code: "de", label: "🇩🇪", name: "Deutsch" },
@@ -42,34 +44,18 @@ const themes = [
   { value: "purple", label: "Custom Modern", color: "bg-gradient-to-r from-purple-500 to-purple-600" },
 ];
 
-// Language Context
-const LanguageContext = createContext<{
-  language: Language;
-  setLanguage: (lang: Language) => void;
-}>({
-  language: "en",
-  setLanguage: () => {},
-});
-
-export const useLanguage = () => useContext(LanguageContext);
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
-  
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-}
-
 export function Navigation() {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
-  const { t } = useTranslation(language);
+  const { language, setLanguage, t, isAdminRoute } = useLanguage();
 
   const isActive = (path: string) => location === path;
+
+  const navItems = [
+    { path: "/", icon: BarChart3, labelKey: "dashboard" },
+    { path: "/analytics", icon: ChartBar, labelKey: "analytics" },
+    { path: "/admin", icon: Settings, labelKey: "admin" },
+  ];
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -79,89 +65,116 @@ export function Navigation() {
           <Link href="/" className="flex items-center space-x-3">
             <img src={logo} alt="BPN Logo" className="w-12 h-12 object-contain" />
             <div>
-              <p className="text-sm text-muted-foreground">PROGRAM MANAGEMENT</p>
+              <p className="text-sm text-muted-foreground">
+                {isAdminRoute ? "PROGRAM MANAGEMENT" : t("welcome_title")}
+              </p>
             </div>
           </Link>
         </div>
 
-        {/* Center Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link href="/">
-            <Button
-              variant={isActive("/") ? "default" : "ghost"}
-              className="space-x-2"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>{t("dashboard")}</span>
-            </Button>
-          </Link>
-          <Button variant="ghost" className="space-x-2">
-            <Calendar className="w-4 h-4" />
-            <span>{t("calendar")}</span>
-          </Button>
-          <Link href="/analytics">
-            <Button
-              variant={isActive("/analytics") ? "default" : "ghost"}
-              className="space-x-2"
-            >
-              <ChartBar className="w-4 h-4" />
-              <span>{t("analytics")}</span>
-            </Button>
-          </Link>
-
+        {/* Center: Navigation Links */}
+        <div className="hidden md:flex items-center space-x-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.path} href={item.path}>
+                <Button
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  className={`flex items-center space-x-2 ${
+                    isActive(item.path) 
+                      ? "bg-primary text-primary-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>
+                    {item.path === "/admin" ? "Admin" : t(item.labelKey as TranslationKey)}
+                  </span>
+                </Button>
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Right Side: Controls */}
+        {/* Right Side: Language Selector, Theme Selector, User Menu */}
         <div className="flex items-center space-x-4">
-          {/* Language Switcher */}
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-12 h-12 border-none bg-transparent hover:bg-accent">
-              <SelectValue>
-                {languages.find(lang => lang.code === language)?.label}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {languages.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code} className="cursor-pointer">
-                  <span className="flex items-center gap-3">
-                    <span className="text-lg">{lang.label}</span>
-                    <span className="text-sm">{lang.name}</span>
+          {/* Language Selector - Only show on non-admin routes */}
+          {!isAdminRoute && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <Globe className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {languages.find(lang => lang.code === language)?.label}
                   </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code as Language)}
+                    className={`flex items-center space-x-3 ${
+                      language === lang.code ? "bg-accent" : ""
+                    }`}
+                  >
+                    <span className="text-lg">{lang.label}</span>
+                    <span>{lang.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-          {/* Theme Switcher */}
+          {/* Theme Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="outline" size="sm" className="flex items-center space-x-2">
                 <Palette className="w-4 h-4" />
+                <ChevronDown className="w-3 h-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end">
               {themes.map((themeOption) => (
                 <DropdownMenuItem
                   key={themeOption.value}
                   onClick={() => setTheme(themeOption.value as any)}
-                  className="flex items-center space-x-2"
+                  className={`flex items-center space-x-3 ${
+                    theme === themeOption.value ? "bg-accent" : ""
+                  }`}
                 >
-                  <div className={`w-4 h-4 rounded ${themeOption.color}`} />
+                  <div className={`w-4 h-4 rounded-full ${themeOption.color}`} />
                   <span>{themeOption.label}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Admin Access */}
-          <Link href="/admin">
-            <Button variant="outline" className="space-x-2">
-              <Settings className="w-4 h-4" />
-              <span>Admin</span>
-            </Button>
-          </Link>
-
-
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <User className="w-4 h-4 mr-2" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="w-4 h-4 mr-2" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <LogOut className="w-4 h-4 mr-2" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>

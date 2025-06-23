@@ -89,7 +89,9 @@ export const translations = {
     loading: "Loading...",
     no_data: "No data available",
     error: "Error",
-    success: "Success"
+    success: "Success",
+    filter: "Filter",
+    export: "Export"
   },
   
   fr: {
@@ -182,7 +184,104 @@ export const translations = {
     loading: "Chargement...",
     no_data: "Aucune donnée disponible",
     error: "Erreur",
-    success: "Succès"
+    success: "Succès",
+    filter: "Filtrer",
+    export: "Exporter"
+  },
+  
+  es: {
+    // Navigation
+    dashboard: "Panel de Control",
+    calendar: "Calendario",
+    analytics: "Analíticas",
+    
+    // Dashboard
+    welcome_title: "Gestión de Programas BPN",
+    welcome_message: "¡Buenos días! Aquí está su resumen de gestión de programas.",
+    refresh: "Actualizar",
+    
+    // Programs
+    programs: "Programas",
+    program: "Programa",
+    total_programs: "Total de Programas",
+    active_programs: "Programas Activos",
+    completed_programs: "Programas Completados",
+    paused_programs: "Programas Pausados",
+    
+    // Analytics
+    analytics_title: "Panel de Analíticas",
+    analytics_subtitle: "Análisis integral e información de programas",
+    total_participants: "Total de Participantes",
+    total_budget: "Presupuesto Total",
+    export_report: "Exportar Reporte",
+    add_chart: "Agregar Gráfico",
+    
+    // Common
+    status: "Estado",
+    progress: "Progreso",
+    participants: "Participantes",
+    budget: "Presupuesto",
+    timeline: "Cronograma",
+    actions: "Acciones",
+    edit: "Editar",
+    delete: "Eliminar",
+    save: "Guardar",
+    cancel: "Cancelar",
+    create: "Crear",
+    search: "Buscar",
+    
+    // Status values
+    active: "Activo",
+    paused: "Pausado",
+    completed: "Completado",
+    cancelled: "Cancelado",
+    
+    // Program details
+    program_details: "Detalles del Programa",
+    start_date: "Fecha de Inicio",
+    end_date: "Fecha de Fin",
+    coordinator: "Coordinador",
+    location: "Ubicación",
+    description: "Descripción",
+    
+    // Activity table
+    activity_table: "Tabla de Actividades",
+    activity_type: "Tipo de Actividad",
+    date: "Fecha",
+    details: "Detalles",
+    
+    // Admin
+    admin: "Admin",
+    admin_panel: "Panel de Administración",
+    table_config: "Configuración de Tabla",
+    column_headers: "Encabezados de Columna",
+    
+    // Forms
+    name: "Nombre",
+    type: "Tipo",
+    add_program: "Agregar Programa",
+    edit_program: "Editar Programa",
+    
+    // Program types
+    core: "CORE",
+    rin: "RIN",
+    aguka: "AGUKA",
+    i_acc: "i-ACC",
+    mcf: "MCF",
+    
+    // Charts
+    chart_config: "Configuración de Gráfico",
+    chart_title: "Título del Gráfico",
+    chart_type: "Tipo de Gráfico",
+    data_source: "Fuente de Datos",
+    
+    // Notifications
+    loading: "Cargando...",
+    no_data: "No hay datos disponibles",
+    error: "Error",
+    success: "Éxito",
+    filter: "Filtrar",
+    export: "Exportar"
   },
   
   rw: {
@@ -275,7 +374,9 @@ export const translations = {
     loading: "Birapakurwa...",
     no_data: "Nta makuru aboneka",
     error: "Ikosa",
-    success: "Byagenze neza"
+    success: "Byagenze neza",
+    filter: "Shyungura",
+    export: "Kohereza"
   },
   
   de: {
@@ -368,7 +469,9 @@ export const translations = {
     loading: "Lädt...",
     no_data: "Keine Daten verfügbar",
     error: "Fehler",
-    success: "Erfolg"
+    success: "Erfolg",
+    filter: "Filtern",
+    export: "Exportieren"
   }
 };
 
