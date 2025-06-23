@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "./db";
 import { adminSettings } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { storage } from "./storage";
 
 const router = Router();
 
@@ -79,73 +80,131 @@ router.post("/charts", async (req, res) => {
   }
 });
 
-// Get analytics data for charts
+// Get real analytics data for charts
 router.get("/data/:dataSource", async (req, res) => {
   try {
     const { dataSource } = req.params;
-    
-    // This endpoint can be extended to provide specific data transformations
-    // for different chart types and data sources
+    const programs = await storage.getPrograms();
     
     switch (dataSource) {
       case "programs":
-        // Get all programs data
-        const programs = await db.query.programs.findMany();
         res.json(programs);
         break;
         
-      case "monthlyProgress":
-        // Generate monthly progress data based on actual program data
-        // This could be enhanced to calculate real metrics from the database
-        const monthlyData = [
-          { month: "Jan", progress: 65, budget: 85000, participants: 120 },
-          { month: "Feb", progress: 72, budget: 92000, participants: 145 },
-          { month: "Mar", progress: 78, budget: 88000, participants: 160 },
-          { month: "Apr", progress: 85, budget: 95000, participants: 180 },
-          { month: "May", progress: 88, budget: 102000, participants: 195 },
-          { month: "Jun", progress: 92, budget: 98000, participants: 210 },
-        ];
-        res.json(monthlyData);
+      case "progressAnalysis":
+        // Real progress analysis by program
+        const progressData = programs.map(program => ({
+          name: program.name,
+          progress: program.progress,
+          target: 100,
+          efficiency: program.progress / (program.participants || 1),
+          type: program.type,
+          startDate: program.startDate,
+        })).filter(p => p.progress > 0);
+        res.json(progressData);
         break;
         
-      case "programTypes":
-        // Get program type distribution
-        const programTypes = await db.query.programs.findMany();
-        const typeData = programTypes.reduce((acc: any[], program) => {
+      case "budgetUtilization":
+        // Real budget utilization analysis
+        const budgetData = programs.map(program => ({
+          name: program.name,
+          allocated: program.budgetAllocated || 0,
+          used: program.budgetUsed || 0,
+          remaining: (program.budgetAllocated || 0) - (program.budgetUsed || 0),
+          utilization: program.budgetAllocated ? ((program.budgetUsed || 0) / program.budgetAllocated) * 100 : 0,
+          type: program.type,
+          status: program.status,
+        })).filter(p => p.allocated > 0);
+        res.json(budgetData);
+        break;
+        
+      case "participantGrowth":
+        // Participant analysis by program type
+        const participantData = programs.reduce((acc: any[], program) => {
           const existing = acc.find(item => item.type === program.type);
           if (existing) {
-            existing.count += 1;
-            existing.budget += program.budgetAllocated || 0;
+            existing.totalParticipants += program.participants || 0;
+            existing.programCount += 1;
+            existing.avgParticipants = Math.round(existing.totalParticipants / existing.programCount);
           } else {
             acc.push({
               type: program.type,
-              count: 1,
-              budget: program.budgetAllocated || 0
+              totalParticipants: program.participants || 0,
+              programCount: 1,
+              avgParticipants: program.participants || 0,
+              status: program.status,
             });
           }
           return acc;
         }, []);
-        res.json(typeData);
+        res.json(participantData);
+        break;
+        
+      case "programPerformance":
+        // Performance metrics combining multiple factors
+        const performanceData = programs.map(program => {
+          const efficiency = program.participants ? (program.progress * program.participants) / 100 : 0;
+          const budgetEfficiency = program.budgetAllocated ? 
+            ((program.progress / 100) * (program.participants || 0)) / (program.budgetAllocated / 1000) : 0;
+          
+          return {
+            name: program.name,
+            progress: program.progress,
+            participants: program.participants || 0,
+            efficiency: Math.round(efficiency),
+            budgetEfficiency: Math.round(budgetEfficiency * 10) / 10,
+            status: program.status,
+            type: program.type,
+            score: Math.round((program.progress + efficiency + budgetEfficiency) / 3),
+          };
+        }).filter(p => p.participants > 0);
+        res.json(performanceData);
         break;
         
       case "statusDistribution":
-        // Get status distribution
-        const allPrograms = await db.query.programs.findMany();
-        const statusData = allPrograms.reduce((acc: any[], program) => {
+        // Real status distribution
+        const statusData = programs.reduce((acc: any[], program) => {
           const existing = acc.find(item => item.status === program.status);
           if (existing) {
             existing.count += 1;
             existing.value += 1;
+            existing.totalBudget += program.budgetAllocated || 0;
+            existing.totalParticipants += program.participants || 0;
           } else {
             acc.push({
               status: program.status,
               count: 1,
-              value: 1
+              value: 1,
+              totalBudget: program.budgetAllocated || 0,
+              totalParticipants: program.participants || 0,
             });
           }
           return acc;
         }, []);
         res.json(statusData);
+        break;
+        
+      case "typeComparison":
+        // Program type comparison with real metrics
+        const typeData = programs.reduce((acc: any[], program) => {
+          const existing = acc.find(item => item.type === program.type);
+          if (existing) {
+            existing.count += 1;
+            existing.totalBudget += program.budgetAllocated || 0;
+            existing.totalParticipants += program.participants || 0;
+            existing.avgProgress = Math.round((existing.avgProgress * (existing.count - 1) + program.progress) / existing.count);
+          } else {
+            acc.push({
+              type: program.type,
+              count: 1,
+              totalBudget: program.budgetAllocated || 0,
+              totalParticipants: program.participants || 0,
+              avgProgress: program.progress,
+            });
+          }
+          return acc;
+        }, []);
+        res.json(typeData);
         break;
         
       default:

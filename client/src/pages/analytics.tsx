@@ -96,11 +96,12 @@ const CHART_TYPES = [
 
 const DATA_SOURCES = [
   { value: "programs", label: "Programs Overview" },
-  { value: "monthlyProgress", label: "Monthly Progress" },
-  { value: "programTypes", label: "Program Types" },
+  { value: "progressAnalysis", label: "Progress Analysis" },
+  { value: "budgetUtilization", label: "Budget Utilization" },
+  { value: "participantGrowth", label: "Participant Growth" },
+  { value: "programPerformance", label: "Program Performance" },
   { value: "statusDistribution", label: "Status Distribution" },
-  { value: "budget", label: "Budget Analysis" },
-  { value: "participants", label: "Participants Data" },
+  { value: "typeComparison", label: "Type Comparison" },
 ];
 
 export default function Analytics() {
@@ -126,33 +127,33 @@ export default function Analytics() {
     initialData: [],
   });
 
-  // Initialize with default charts if none exist
+  // Initialize with meaningful default charts if none exist
   useEffect(() => {
     if (savedConfigs && savedConfigs.length === 0) {
       const defaultCharts: ChartConfig[] = [
         {
-          id: "overview-stats",
-          title: "Program Overview Statistics",
+          id: "progress-analysis",
+          title: "Program Progress Analysis",
           type: "bar",
-          dataSource: "programTypes",
-          xAxis: "type",
-          yAxis: "count",
+          dataSource: "progressAnalysis",
+          xAxis: "name",
+          yAxis: "progress",
           color: "#8884d8",
           width: "half",
           height: "medium",
-          description: "Distribution of programs by type"
+          description: "Current progress of all programs"
         },
         {
-          id: "monthly-progress",
-          title: "Monthly Progress Trends",
+          id: "budget-utilization",
+          title: "Budget Utilization by Program",
           type: "line",
-          dataSource: "monthlyProgress",
-          xAxis: "month",
-          yAxis: "progress",
+          dataSource: "budgetUtilization",
+          xAxis: "name",
+          yAxis: "utilization",
           color: "#82ca9d",
           width: "half",
           height: "medium",
-          description: "Progress tracking over time"
+          description: "Budget usage efficiency across programs"
         },
         {
           id: "status-distribution",
@@ -162,19 +163,19 @@ export default function Analytics() {
           color: "#ffc658",
           width: "half",
           height: "medium",
-          description: "Current status breakdown"
+          description: "Programs by current status"
         },
         {
-          id: "budget-analysis",
-          title: "Budget Utilization Analysis",
+          id: "performance-metrics",
+          title: "Overall Program Performance",
           type: "area",
-          dataSource: "monthlyProgress",
-          xAxis: "month",
-          yAxis: "budget",
+          dataSource: "programPerformance",
+          xAxis: "name",
+          yAxis: "score",
           color: "#ff7300",
           width: "full",
           height: "large",
-          description: "Budget allocation and usage trends"
+          description: "Comprehensive performance scoring"
         }
       ];
       setChartConfigs(defaultCharts);
@@ -224,14 +225,46 @@ export default function Analytics() {
 
 
 
+  // Load real-time data for different sources
+  const { data: progressData } = useQuery({
+    queryKey: ["/api/analytics/data/progressAnalysis"],
+    enabled: chartConfigs.some(c => c.dataSource === "progressAnalysis")
+  });
+
+  const { data: budgetData } = useQuery({
+    queryKey: ["/api/analytics/data/budgetUtilization"],
+    enabled: chartConfigs.some(c => c.dataSource === "budgetUtilization")
+  });
+
+  const { data: participantData } = useQuery({
+    queryKey: ["/api/analytics/data/participantGrowth"],
+    enabled: chartConfigs.some(c => c.dataSource === "participantGrowth")
+  });
+
+  const { data: performanceData } = useQuery({
+    queryKey: ["/api/analytics/data/programPerformance"],
+    enabled: chartConfigs.some(c => c.dataSource === "programPerformance")
+  });
+
+  const { data: statusData } = useQuery({
+    queryKey: ["/api/analytics/data/statusDistribution"],
+    enabled: chartConfigs.some(c => c.dataSource === "statusDistribution")
+  });
+
+  const { data: typeData } = useQuery({
+    queryKey: ["/api/analytics/data/typeComparison"],
+    enabled: chartConfigs.some(c => c.dataSource === "typeComparison")
+  });
+
   const getChartData = (dataSource: string) => {
     switch (dataSource) {
       case "programs": return analyticsData.programs;
-      case "monthlyProgress": return analyticsData.monthlyProgress;
-      case "programTypes": return analyticsData.programTypes;
-      case "statusDistribution": return analyticsData.statusDistribution;
-      case "budget": return analyticsData.monthlyProgress;
-      case "participants": return analyticsData.monthlyProgress;
+      case "progressAnalysis": return progressData || [];
+      case "budgetUtilization": return budgetData || [];
+      case "participantGrowth": return participantData || [];
+      case "programPerformance": return performanceData || [];
+      case "statusDistribution": return statusData || analyticsData.statusDistribution;
+      case "typeComparison": return typeData || analyticsData.programTypes;
       case "custom": return customData;
       default: return [];
     }

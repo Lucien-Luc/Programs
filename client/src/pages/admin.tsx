@@ -423,11 +423,14 @@ function ChartEditor({
   ];
 
   const DATA_SOURCES = [
-    { value: "programs", label: "Programs Data" },
+    { value: "programs", label: "Programs Overview" },
+    { value: "progressAnalysis", label: "Progress Analysis" },
+    { value: "budgetUtilization", label: "Budget Utilization" },
+    { value: "participantGrowth", label: "Participant Growth" },
+    { value: "programPerformance", label: "Program Performance" },
+    { value: "statusDistribution", label: "Status Distribution" },
+    { value: "typeComparison", label: "Type Comparison" },
     { value: "custom", label: "Custom Data" },
-    { value: "monthlyProgress", label: "Monthly Progress" },
-    { value: "budget", label: "Budget Analysis" },
-    { value: "participants", label: "Participants" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
