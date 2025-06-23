@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/navigation";
+import { useTranslation } from "@/lib/i18n";
 import {
   Table,
   TableBody,
@@ -64,6 +66,8 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(activities.length / itemsPerPage);
+  const { language } = useLanguage();
+  const { t } = useTranslation(language);
   
   const paginatedActivities = activities.slice(
     (currentPage - 1) * itemsPerPage,
@@ -78,19 +82,19 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
       if (!response.ok) {
         // Return default headers if none configured
         return [
-          { columnKey: 'program', displayName: 'Program', isVisible: true, sortOrder: 0 },
-          { columnKey: 'activity_type', displayName: 'Activity Type', isVisible: true, sortOrder: 1 },
-          { columnKey: 'date', displayName: 'Date', isVisible: true, sortOrder: 2 },
-          { columnKey: 'status', displayName: 'Status', isVisible: true, sortOrder: 3 },
-          { columnKey: 'details', displayName: 'Details', isVisible: true, sortOrder: 4 },
-          { columnKey: 'actions', displayName: 'Actions', isVisible: true, sortOrder: 5 },
+          { columnKey: 'program', displayName: t('program'), isVisible: true, sortOrder: 0 },
+          { columnKey: 'activity_type', displayName: t('activity_type'), isVisible: true, sortOrder: 1 },
+          { columnKey: 'date', displayName: t('date'), isVisible: true, sortOrder: 2 },
+          { columnKey: 'status', displayName: t('status'), isVisible: true, sortOrder: 3 },
+          { columnKey: 'details', displayName: t('details'), isVisible: true, sortOrder: 4 },
+          { columnKey: 'actions', displayName: t('actions'), isVisible: true, sortOrder: 5 },
         ];
       }
       return response.json();
     }
   });
 
-  const getProgramById = (id: number) => programs.find(p => p.id === id);
+  const getProgramById = (id: number | null) => id ? programs.find(p => p.id === id) : null;
   
   // Sort headers and filter visible ones
   const visibleHeaders = columnHeaders
@@ -152,16 +156,16 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <List className="w-5 h-5 text-primary" />
-            <span>Recent Program Activity</span>
+            <span>{t("activity_table")}</span>
           </CardTitle>
           <div className="flex space-x-3">
             <Button variant="outline" size="sm">
               <Filter className="w-4 h-4 mr-2" />
-              Filter
+              {t("filter")}
             </Button>
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
-              Export
+              {t("export")}
             </Button>
           </div>
         </div>

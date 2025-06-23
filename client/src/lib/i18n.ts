@@ -45,6 +45,51 @@ export const translations = {
     paused: "Paused",
     completed: "Completed",
     cancelled: "Cancelled",
+    
+    // Program details
+    program_details: "Program Details",
+    start_date: "Start Date",
+    end_date: "End Date",
+    coordinator: "Coordinator",
+    location: "Location",
+    description: "Description",
+    
+    // Activity table
+    activity_table: "Activity Table",
+    activity_type: "Activity Type",
+    date: "Date",
+    details: "Details",
+    
+    // Admin
+    admin: "Admin",
+    admin_panel: "Admin Panel",
+    table_config: "Table Configuration",
+    column_headers: "Column Headers",
+    
+    // Forms
+    name: "Name",
+    type: "Type",
+    add_program: "Add Program",
+    edit_program: "Edit Program",
+    
+    // Program types
+    core: "CORE",
+    rin: "RIN",
+    aguka: "AGUKA",
+    i_acc: "i-ACC",
+    mcf: "MCF",
+    
+    // Charts
+    chart_config: "Chart Configuration",
+    chart_title: "Chart Title",
+    chart_type: "Chart Type",
+    data_source: "Data Source",
+    
+    // Notifications
+    loading: "Loading...",
+    no_data: "No data available",
+    error: "Error",
+    success: "Success"
   },
   
   fr: {
@@ -93,6 +138,51 @@ export const translations = {
     paused: "En pause",
     completed: "Terminé",
     cancelled: "Annulé",
+    
+    // Program details
+    program_details: "Détails du programme",
+    start_date: "Date de début",
+    end_date: "Date de fin",
+    coordinator: "Coordinateur",
+    location: "Emplacement",
+    description: "Description",
+    
+    // Activity table
+    activity_table: "Tableau d'activités",
+    activity_type: "Type d'activité",
+    date: "Date",
+    details: "Détails",
+    
+    // Admin
+    admin: "Admin",
+    admin_panel: "Panneau d'administration",
+    table_config: "Configuration de table",
+    column_headers: "En-têtes de colonne",
+    
+    // Forms
+    name: "Nom",
+    type: "Type",
+    add_program: "Ajouter un programme",
+    edit_program: "Modifier le programme",
+    
+    // Program types
+    core: "CORE",
+    rin: "RIN",
+    aguka: "AGUKA",
+    i_acc: "i-ACC",
+    mcf: "MCF",
+    
+    // Charts
+    chart_config: "Configuration du graphique",
+    chart_title: "Titre du graphique",
+    chart_type: "Type de graphique",
+    data_source: "Source de données",
+    
+    // Notifications
+    loading: "Chargement...",
+    no_data: "Aucune donnée disponible",
+    error: "Erreur",
+    success: "Succès"
   },
   
   rw: {
@@ -141,6 +231,51 @@ export const translations = {
     paused: "Byahagaritswe",
     completed: "Byarangiye",
     cancelled: "Byahagaritswe burundu",
+    
+    // Program details
+    program_details: "Amakuru y'ikibazo",
+    start_date: "Itariki yo gutangira",
+    end_date: "Itariki yo kurangiza",
+    coordinator: "Uwukorana",
+    location: "Ahantu",
+    description: "Ibisobanuro",
+    
+    // Activity table
+    activity_table: "Imbonerahamwe y'ibikorwa",
+    activity_type: "Ubwoko bw'igikorwa",
+    date: "Itariki",
+    details: "Amakuru arambuye",
+    
+    // Admin
+    admin: "Umuyobozi",
+    admin_panel: "Urubuga rw'ubuyobozi",
+    table_config: "Iboneza ry'imbonerahamwe",
+    column_headers: "Imitwe y'inkingi",
+    
+    // Forms
+    name: "Izina",
+    type: "Ubwoko",
+    add_program: "Ongeraho porogaramu",
+    edit_program: "Hindura porogaramu",
+    
+    // Program types
+    core: "CORE",
+    rin: "RIN",
+    aguka: "AGUKA",
+    i_acc: "i-ACC",
+    mcf: "MCF",
+    
+    // Charts
+    chart_config: "Iboneza ry'ishusho",
+    chart_title: "Umutwe w'ishusho",
+    chart_type: "Ubwoko bw'ishusho",
+    data_source: "Inkomoko y'amakuru",
+    
+    // Notifications
+    loading: "Birapakurwa...",
+    no_data: "Nta makuru aboneka",
+    error: "Ikosa",
+    success: "Byagenze neza"
   },
   
   de: {
@@ -189,6 +324,51 @@ export const translations = {
     paused: "Pausiert",
     completed: "Abgeschlossen",
     cancelled: "Abgebrochen",
+    
+    // Program details
+    program_details: "Programmdetails",
+    start_date: "Startdatum",
+    end_date: "Enddatum",
+    coordinator: "Koordinator",
+    location: "Standort",
+    description: "Beschreibung",
+    
+    // Activity table
+    activity_table: "Aktivitätstabelle",
+    activity_type: "Aktivitätstyp",
+    date: "Datum",
+    details: "Details",
+    
+    // Admin
+    admin: "Admin",
+    admin_panel: "Admin-Panel",
+    table_config: "Tabellenkonfiguration",
+    column_headers: "Spaltenüberschriften",
+    
+    // Forms
+    name: "Name",
+    type: "Typ",
+    add_program: "Programm hinzufügen",
+    edit_program: "Programm bearbeiten",
+    
+    // Program types
+    core: "CORE",
+    rin: "RIN",
+    aguka: "AGUKA",
+    i_acc: "i-ACC",
+    mcf: "MCF",
+    
+    // Charts
+    chart_config: "Diagrammkonfiguration",
+    chart_title: "Diagrammtitel",
+    chart_type: "Diagrammtyp",
+    data_source: "Datenquelle",
+    
+    // Notifications
+    loading: "Lädt...",
+    no_data: "Keine Daten verfügbar",
+    error: "Fehler",
+    success: "Erfolg"
   }
 };
 

@@ -85,7 +85,7 @@ export default function Dashboard() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             <BarChart3 className="mr-2 w-6 h-6 text-primary" />
-            Program Overview
+            {t("programs")}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
