@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema } from "@shared/schema";
+import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema, insertTableColumnConfigSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Programs API
@@ -191,11 +191,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/table-columns", async (req, res) => {
     try {
-      const config = req.body;
-      const updatedConfig = await storage.updateTableColumnConfig(config);
+      const configData = insertTableColumnConfigSchema.parse(req.body);
+      const updatedConfig = await storage.updateTableColumnConfig(configData);
       res.json(updatedConfig);
     } catch (error) {
-      res.status(400).json({ error: "Invalid column configuration" });
+      console.error("Table column config validation error:", error);
+      res.status(400).json({ 
+        error: "Invalid column configuration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

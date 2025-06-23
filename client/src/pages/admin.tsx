@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { ProgramForm } from "@/components/admin/program-form";
 import { EnhancedTableBuilder } from "@/components/admin/enhanced-table-builder";
+import { FieldManager } from "@/components/admin/field-manager";
 import { LoginForm } from "@/components/login-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -397,15 +398,7 @@ export default function Admin() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Settings className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">System Settings</h3>
-                <p className="text-muted-foreground">
-                  System configuration options will be available here.
-                </p>
-              </CardContent>
-            </Card>
+            <FieldManager />
           </TabsContent>
         </Tabs>
 
