@@ -29,17 +29,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/programs", async (req, res) => {
     try {
+      console.log("Received program data:", JSON.stringify(req.body, null, 2));
       const program = insertProgramSchema.parse(req.body);
       const newProgram = await storage.createProgram(program);
       res.json(newProgram);
     } catch (error) {
-      res.status(400).json({ error: "Invalid program data" });
+      console.error("Program creation error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message, details: error });
+      } else {
+        res.status(400).json({ error: "Invalid program data", details: error });
+      }
     }
   });
 
   app.put("/api/programs/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log("Updating program", id, "with data:", JSON.stringify(req.body, null, 2));
       const program = insertProgramSchema.partial().parse(req.body);
       const updatedProgram = await storage.updateProgram(id, program);
       if (!updatedProgram) {
@@ -47,7 +54,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(updatedProgram);
     } catch (error) {
-      res.status(400).json({ error: "Invalid program data" });
+      console.error("Program update error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message, details: error });
+      } else {
+        res.status(400).json({ error: "Invalid program data", details: error });
+      }
     }
   });
 
@@ -142,6 +154,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedConfig);
     } catch (error) {
       res.status(400).json({ error: "Invalid table configuration" });
+    }
+  });
+
+  // Program Suggestions API
+  app.get("/api/program-suggestions", async (req, res) => {
+    try {
+      const keyword = req.query.keyword as string;
+      const suggestions = await storage.getProgramSuggestions(keyword);
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch program suggestions" });
+    }
+  });
+
+  app.post("/api/program-suggestions", async (req, res) => {
+    try {
+      const suggestion = req.body;
+      const newSuggestion = await storage.createProgramSuggestion(suggestion);
+      res.json(newSuggestion);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid suggestion data" });
+    }
+  });
+
+  // Table Column Configuration API
+  app.get("/api/table-columns/:tableName", async (req, res) => {
+    try {
+      const tableName = req.params.tableName;
+      const columns = await storage.getTableColumnConfig(tableName);
+      res.json(columns);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch table column configuration" });
+    }
+  });
+
+  app.post("/api/table-columns", async (req, res) => {
+    try {
+      const config = req.body;
+      const updatedConfig = await storage.updateTableColumnConfig(config);
+      res.json(updatedConfig);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid column configuration" });
     }
   });
 

@@ -1,4 +1,4 @@
-import { programs, activities, tableConfig, users, adminSettings, type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings } from "@shared/schema";
+import { programs, activities, tableConfig, users, adminSettings, programSuggestions, tableColumnConfig, type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings, type ProgramSuggestion, type InsertProgramSuggestion, type TableColumnConfig, type InsertTableColumnConfig } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -20,6 +20,13 @@ export interface IStorage {
   // Table Configuration
   getTableConfig(tableName: string): Promise<TableConfig | undefined>;
   updateTableConfig(config: InsertTableConfig): Promise<TableConfig>;
+  getTableColumnConfig(tableName: string): Promise<TableColumnConfig[]>;
+  updateTableColumnConfig(config: InsertTableColumnConfig): Promise<TableColumnConfig>;
+
+  // Program Suggestions
+  getProgramSuggestions(keyword?: string): Promise<ProgramSuggestion[]>;
+  createProgramSuggestion(suggestion: InsertProgramSuggestion): Promise<ProgramSuggestion>;
+  updateProgramSuggestion(id: number, suggestion: Partial<InsertProgramSuggestion>): Promise<ProgramSuggestion | undefined>;
 
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -35,6 +42,18 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     // Initialize database with sample data if needed
     this.initializeData();
+  }
+
+  // Helper function to convert date strings to Date objects
+  private processDateFields(data: any) {
+    const processed = { ...data };
+    if (processed.startDate && typeof processed.startDate === 'string') {
+      processed.startDate = new Date(processed.startDate);
+    }
+    if (processed.endDate && typeof processed.endDate === 'string') {
+      processed.endDate = new Date(processed.endDate);
+    }
+    return processed;
   }
 
   async initializeData() {
@@ -196,6 +215,48 @@ export class DatabaseStorage implements IStorage {
       ];
 
       await db.insert(adminSettings).values(defaultSettings);
+
+      // Create default program suggestions
+      const defaultSuggestions = [
+        {
+          keyword: "education",
+          name: "Basic Education Enhancement",
+          type: "CORE",
+          description: "Improving literacy and numeracy skills in rural communities",
+          tags: ["education", "literacy", "rural"],
+          category: "education",
+          priority: "high",
+          defaultColor: "#4A90A4",
+          defaultIcon: "bullseye",
+          metadata: { sector: "education", target: "rural communities" }
+        },
+        {
+          keyword: "health",
+          name: "Community Health Program",
+          type: "RIN",
+          description: "Strengthening healthcare delivery systems",
+          tags: ["health", "community", "healthcare"],
+          category: "health",
+          priority: "high",
+          defaultColor: "#E67E22",
+          defaultIcon: "handshake",
+          metadata: { sector: "health", target: "communities" }
+        },
+        {
+          keyword: "agriculture",
+          name: "Sustainable Agriculture Initiative",
+          type: "AGUKA",
+          description: "Promoting sustainable farming practices and food security",
+          tags: ["agriculture", "sustainability", "food"],
+          category: "agriculture",
+          priority: "medium",
+          defaultColor: "#27AE60",
+          defaultIcon: "seedling",
+          metadata: { sector: "agriculture", target: "farmers" }
+        }
+      ];
+
+      await db.insert(programSuggestions).values(defaultSuggestions);
     } catch (error) {
       console.error("Error initializing data:", error);
     }
@@ -212,13 +273,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProgram(program: InsertProgram): Promise<Program> {
-    const [newProgram] = await db.insert(programs).values(program).returning();
+    const processedProgram = this.processDateFields(program);
+    const [newProgram] = await db.insert(programs).values(processedProgram).returning();
     return newProgram;
   }
 
   async updateProgram(id: number, program: Partial<InsertProgram>): Promise<Program | undefined> {
+    const processedProgram = this.processDateFields(program);
     const [updated] = await db.update(programs)
-      .set({ ...program, updatedAt: new Date() })
+      .set({ ...processedProgram, updatedAt: new Date() })
       .where(eq(programs.id, id))
       .returning();
     return updated;
@@ -316,6 +379,44 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return setting;
+  }
+
+  // Table Column Configuration
+  async getTableColumnConfig(tableName: string): Promise<TableColumnConfig[]> {
+    return await db.select().from(tableColumnConfig).where(eq(tableColumnConfig.tableName, tableName));
+  }
+
+  async updateTableColumnConfig(config: InsertTableColumnConfig): Promise<TableColumnConfig> {
+    const [result] = await db.insert(tableColumnConfig)
+      .values(config)
+      .onConflictDoUpdate({
+        target: [tableColumnConfig.tableName, tableColumnConfig.columnKey],
+        set: { ...config, updatedAt: new Date() },
+      })
+      .returning();
+    return result;
+  }
+
+  // Program Suggestions
+  async getProgramSuggestions(keyword?: string): Promise<ProgramSuggestion[]> {
+    if (keyword) {
+      return await db.select().from(programSuggestions)
+        .where(eq(programSuggestions.keyword, keyword));
+    }
+    return await db.select().from(programSuggestions);
+  }
+
+  async createProgramSuggestion(suggestion: InsertProgramSuggestion): Promise<ProgramSuggestion> {
+    const [result] = await db.insert(programSuggestions).values(suggestion).returning();
+    return result;
+  }
+
+  async updateProgramSuggestion(id: number, suggestion: Partial<InsertProgramSuggestion>): Promise<ProgramSuggestion | undefined> {
+    const [result] = await db.update(programSuggestions)
+      .set(suggestion)
+      .where(eq(programSuggestions.id, id))
+      .returning();
+    return result;
   }
 }
 

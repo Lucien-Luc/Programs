@@ -26,7 +26,13 @@ export const programs = pgTable("programs", {
   budgetAllocated: integer("budget_allocated").default(0),
   budgetUsed: integer("budget_used").default(0),
   color: text("color").notNull(),
-  icon: text("icon").notNull(),
+  icon: text("icon"),
+  image: text("image"), // program image filename/path
+  imageUrl: text("image_url"), // external image URL
+  tags: text("tags").array(), // for intelligent suggestions
+  category: text("category"), // additional categorization
+  priority: text("priority").default("medium"), // low, medium, high
+  metadata: jsonb("metadata"), // flexible data storage
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -66,10 +72,57 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Program suggestions and templates
+export const programSuggestions = pgTable("program_suggestions", {
+  id: serial("id").primaryKey(),
+  keyword: text("keyword").notNull(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  description: text("description"),
+  tags: text("tags").array(),
+  category: text("category"),
+  priority: text("priority").default("medium"),
+  defaultColor: text("default_color"),
+  defaultIcon: text("default_icon"),
+  metadata: jsonb("metadata"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced table configuration with column customization
+export const tableColumnConfig = pgTable("table_column_config", {
+  id: serial("id").primaryKey(),
+  tableName: text("table_name").notNull(),
+  columnKey: text("column_key").notNull(),
+  displayName: text("display_name").notNull(),
+  dataType: text("data_type").notNull(), // 'text', 'number', 'date', 'status', 'image', 'actions'
+  isVisible: boolean("is_visible").default(true),
+  isEditable: boolean("is_editable").default(true),
+  sortOrder: integer("sort_order").default(0),
+  width: integer("width"),
+  alignment: text("alignment").default("left"), // 'left', 'center', 'right'
+  formatOptions: jsonb("format_options"), // formatting rules
+  validationRules: jsonb("validation_rules"), // validation settings
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertProgramSchema = createInsertSchema(programs).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  // Make icon optional since we're adding image support
+  icon: z.string().optional(),
+  // Add validation for new fields
+  image: z.string().optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")),
+  tags: z.array(z.string()).optional(),
+  category: z.string().optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
+  metadata: z.record(z.any()).optional(),
+  // Handle date fields properly - accept both Date objects and ISO strings
+  startDate: z.union([z.date(), z.string().datetime(), z.string().optional()]).optional(),
+  endDate: z.union([z.date(), z.string().datetime(), z.string().optional()]).optional(),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
@@ -91,6 +144,16 @@ export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit(
   updatedAt: true,
 });
 
+export const insertProgramSuggestionSchema = createInsertSchema(programSuggestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTableColumnConfigSchema = createInsertSchema(tableColumnConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type Program = typeof programs.$inferSelect;
 export type InsertProgram = z.infer<typeof insertProgramSchema>;
 export type Activity = typeof activities.$inferSelect;
@@ -101,6 +164,10 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = z.infer<typeof insertAdminSettingsSchema>;
+export type ProgramSuggestion = typeof programSuggestions.$inferSelect;
+export type InsertProgramSuggestion = z.infer<typeof insertProgramSuggestionSchema>;
+export type TableColumnConfig = typeof tableColumnConfig.$inferSelect;
+export type InsertTableColumnConfig = z.infer<typeof insertTableColumnConfigSchema>;
 
 // For authentication (simplified for now)
 export type UpsertUser = typeof users.$inferInsert;

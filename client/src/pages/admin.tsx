@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { ProgramForm } from "@/components/admin/program-form";
-import { TableBuilder } from "@/components/admin/table-builder";
+import { EnhancedTableBuilder } from "@/components/admin/enhanced-table-builder";
 import { LoginForm } from "@/components/login-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
