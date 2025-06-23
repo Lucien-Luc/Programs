@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema, insertTableColumnConfigSchema } from "@shared/schema";
+import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema, insertColumnHeaderSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Programs API
@@ -178,26 +178,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Table Column Configuration API
-  app.get("/api/table-columns/:tableName", async (req, res) => {
+  // Column Headers API
+  app.get("/api/column-headers/:tableName", async (req, res) => {
     try {
       const tableName = req.params.tableName;
-      const columns = await storage.getTableColumnConfig(tableName);
-      res.json(columns);
+      const headers = await storage.getColumnHeaders(tableName);
+      res.json(headers);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch table column configuration" });
+      res.status(500).json({ error: "Failed to fetch column headers" });
     }
   });
 
-  app.post("/api/table-columns", async (req, res) => {
+  app.post("/api/column-headers", async (req, res) => {
     try {
-      const configData = insertTableColumnConfigSchema.parse(req.body);
-      const updatedConfig = await storage.updateTableColumnConfig(configData);
-      res.json(updatedConfig);
+      const headerData = insertColumnHeaderSchema.parse(req.body);
+      const updatedHeader = await storage.updateColumnHeader(headerData);
+      res.json(updatedHeader);
     } catch (error) {
-      console.error("Table column config validation error:", error);
+      console.error("Column header validation error:", error);
       res.status(400).json({ 
-        error: "Invalid column configuration",
+        error: "Invalid column header configuration",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

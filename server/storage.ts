@@ -1,4 +1,4 @@
-import { programs, activities, tableConfig, users, adminSettings, programSuggestions, tableColumnConfig, type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings, type ProgramSuggestion, type InsertProgramSuggestion, type TableColumnConfig, type InsertTableColumnConfig } from "@shared/schema";
+import { programs, activities, tableConfig, users, adminSettings, programSuggestions, columnHeaders, type Program, type InsertProgram, type Activity, type InsertActivity, type TableConfig, type InsertTableConfig, type User, type InsertUser, type UpsertUser, type AdminSettings, type InsertAdminSettings, type ProgramSuggestion, type InsertProgramSuggestion, type ColumnHeader, type InsertColumnHeader } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -20,8 +20,10 @@ export interface IStorage {
   // Table Configuration
   getTableConfig(tableName: string): Promise<TableConfig | undefined>;
   updateTableConfig(config: InsertTableConfig): Promise<TableConfig>;
-  getTableColumnConfig(tableName: string): Promise<TableColumnConfig[]>;
-  updateTableColumnConfig(config: InsertTableColumnConfig): Promise<TableColumnConfig>;
+  
+  // Column Headers Management
+  getColumnHeaders(tableName: string): Promise<ColumnHeader[]>;
+  updateColumnHeader(config: InsertColumnHeader): Promise<ColumnHeader>;
 
   // Program Suggestions
   getProgramSuggestions(keyword?: string): Promise<ProgramSuggestion[]>;
@@ -381,16 +383,36 @@ export class DatabaseStorage implements IStorage {
     return setting;
   }
 
-  // Table Column Configuration
-  async getTableColumnConfig(tableName: string): Promise<TableColumnConfig[]> {
-    return await db.select().from(tableColumnConfig).where(eq(tableColumnConfig.tableName, tableName));
+  // Column Headers Management
+  async getColumnHeaders(tableName: string): Promise<ColumnHeader[]> {
+    const headers = await db.select().from(columnHeaders).where(eq(columnHeaders.tableName, tableName));
+    
+    // If no headers exist, create default ones for the activities table
+    if (headers.length === 0 && tableName === 'activities') {
+      const defaultHeaders = [
+        { tableName: 'activities', columnKey: 'program', displayName: 'Program', sortOrder: 0 },
+        { tableName: 'activities', columnKey: 'activity_type', displayName: 'Activity Type', sortOrder: 1 },
+        { tableName: 'activities', columnKey: 'date', displayName: 'Date', sortOrder: 2 },
+        { tableName: 'activities', columnKey: 'status', displayName: 'Status', sortOrder: 3 },
+        { tableName: 'activities', columnKey: 'details', displayName: 'Details', sortOrder: 4 },
+        { tableName: 'activities', columnKey: 'actions', displayName: 'Actions', sortOrder: 5 },
+      ];
+      
+      for (const header of defaultHeaders) {
+        await db.insert(columnHeaders).values(header);
+      }
+      
+      return await db.select().from(columnHeaders).where(eq(columnHeaders.tableName, tableName));
+    }
+    
+    return headers;
   }
 
-  async updateTableColumnConfig(config: InsertTableColumnConfig): Promise<TableColumnConfig> {
-    const [result] = await db.insert(tableColumnConfig)
+  async updateColumnHeader(config: InsertColumnHeader): Promise<ColumnHeader> {
+    const [result] = await db.insert(columnHeaders)
       .values(config)
       .onConflictDoUpdate({
-        target: [tableColumnConfig.tableName, tableColumnConfig.columnKey],
+        target: [columnHeaders.tableName, columnHeaders.columnKey],
         set: { ...config, updatedAt: new Date() },
       })
       .returning();

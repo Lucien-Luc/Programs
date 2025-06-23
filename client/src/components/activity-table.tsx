@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,17 @@ import {
 } from "lucide-react";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import type { Activity, Program } from "@shared/schema";
+
+interface ColumnHeader {
+  id: number;
+  tableName: string;
+  columnKey: string;
+  displayName: string;
+  isVisible: boolean;
+  sortOrder: number;
+  width: string;
+  alignment: string;
+}
 
 interface ActivityTableProps {
   activities: Activity[];
@@ -58,7 +70,81 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
     currentPage * itemsPerPage
   );
 
+  // Fetch configurable column headers
+  const { data: columnHeaders = [] } = useQuery({
+    queryKey: ['/api/column-headers', 'activities'],
+    queryFn: async () => {
+      const response = await fetch('/api/column-headers/activities');
+      if (!response.ok) {
+        // Return default headers if none configured
+        return [
+          { columnKey: 'program', displayName: 'Program', isVisible: true, sortOrder: 0 },
+          { columnKey: 'activity_type', displayName: 'Activity Type', isVisible: true, sortOrder: 1 },
+          { columnKey: 'date', displayName: 'Date', isVisible: true, sortOrder: 2 },
+          { columnKey: 'status', displayName: 'Status', isVisible: true, sortOrder: 3 },
+          { columnKey: 'details', displayName: 'Details', isVisible: true, sortOrder: 4 },
+          { columnKey: 'actions', displayName: 'Actions', isVisible: true, sortOrder: 5 },
+        ];
+      }
+      return response.json();
+    }
+  });
+
   const getProgramById = (id: number) => programs.find(p => p.id === id);
+  
+  // Sort headers and filter visible ones
+  const visibleHeaders = columnHeaders
+    .filter((header: ColumnHeader) => header.isVisible)
+    .sort((a: ColumnHeader, b: ColumnHeader) => a.sortOrder - b.sortOrder);
+
+  const renderCellContent = (activity: Activity, columnKey: string) => {
+    const program = getProgramById(activity.programId);
+    
+    switch (columnKey) {
+      case 'program':
+        if (!program) return 'Unknown Program';
+        const IconComponent = iconMap[program.icon as keyof typeof iconMap] || Target;
+        return (
+          <div className="flex items-center space-x-3">
+            <IconComponent className="h-5 w-5" style={{ color: program.color }} />
+            <span className="font-medium">{program.name}</span>
+          </div>
+        );
+        
+      case 'activity_type':
+        return activity.type;
+        
+      case 'date':
+        return formatDate(activity.date);
+        
+      case 'status':
+        return (
+          <Badge 
+            variant="secondary"
+            style={{ 
+              backgroundColor: getStatusColor(activity.status) + '20', 
+              color: getStatusColor(activity.status) 
+            }}
+          >
+            {activity.status.replace('_', ' ').toUpperCase()}
+          </Badge>
+        );
+        
+      case 'details':
+        return activity.details || activity.description || '-';
+        
+      case 'actions':
+        const ActionIcon = actionIconMap[activity.status as keyof typeof actionIconMap] || Eye;
+        return (
+          <Button variant="ghost" size="sm">
+            <ActionIcon className="w-4 h-4" />
+          </Button>
+        );
+        
+      default:
+        return '-';
+    }
+  };
 
   return (
     <Card>
@@ -85,12 +171,11 @@ export function ActivityTable({ activities, programs }: ActivityTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Program</TableHead>
-                <TableHead>Activity Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Actions</TableHead>
+                {visibleHeaders.map((header: ColumnHeader) => (
+                  <TableHead key={header.columnKey} style={{ width: header.width !== 'auto' ? header.width : undefined }}>
+                    {header.displayName}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>

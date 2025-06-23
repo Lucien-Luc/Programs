@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -89,20 +89,16 @@ export const programSuggestions = pgTable("program_suggestions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Enhanced table configuration with column customization
-export const tableColumnConfig = pgTable("table_column_config", {
+// Column headers configuration - for customizing table headers in dashboard
+export const columnHeaders = pgTable("column_headers", {
   id: serial("id").primaryKey(),
-  tableName: text("table_name").notNull(),
-  columnKey: text("column_key").notNull(),
-  displayName: text("display_name").notNull(),
-  dataType: text("data_type").notNull(), // 'text', 'number', 'date', 'status', 'image', 'actions'
+  tableName: text("table_name").notNull(), // 'activities', 'programs', etc.
+  columnKey: text("column_key").notNull(), // 'program', 'activity_type', 'date', etc.
+  displayName: text("display_name").notNull(), // What users see
   isVisible: boolean("is_visible").default(true),
-  isEditable: boolean("is_editable").default(true),
   sortOrder: integer("sort_order").default(0),
-  width: integer("width"),
-  alignment: text("alignment").default("left"), // 'left', 'center', 'right'
-  formatOptions: jsonb("format_options"), // formatting rules
-  validationRules: jsonb("validation_rules"), // validation settings
+  width: text("width").default("auto"), // 'auto', '150px', '20%'
+  alignment: text("alignment").default("left"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -149,7 +145,7 @@ export const insertProgramSuggestionSchema = createInsertSchema(programSuggestio
   createdAt: true,
 });
 
-export const insertTableColumnConfigSchema = createInsertSchema(tableColumnConfig).omit({
+export const insertColumnHeaderSchema = createInsertSchema(columnHeaders).omit({
   id: true,
   updatedAt: true,
 });
@@ -166,8 +162,8 @@ export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = z.infer<typeof insertAdminSettingsSchema>;
 export type ProgramSuggestion = typeof programSuggestions.$inferSelect;
 export type InsertProgramSuggestion = z.infer<typeof insertProgramSuggestionSchema>;
-export type TableColumnConfig = typeof tableColumnConfig.$inferSelect;
-export type InsertTableColumnConfig = z.infer<typeof insertTableColumnConfigSchema>;
+export type ColumnHeader = typeof columnHeaders.$inferSelect;
+export type InsertColumnHeader = z.infer<typeof insertColumnHeaderSchema>;
 
 // For authentication (simplified for now)
 export type UpsertUser = typeof users.$inferInsert;

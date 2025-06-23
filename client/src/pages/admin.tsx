@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { ProgramForm } from "@/components/admin/program-form";
 import { EnhancedTableBuilder } from "@/components/admin/enhanced-table-builder";
-import { FieldManager } from "@/components/admin/field-manager";
+import { ColumnHeaderManager } from "@/components/admin/column-header-manager";
 import { LoginForm } from "@/components/login-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -398,7 +398,7 @@ export default function Admin() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <FieldManager />
+            <ColumnHeaderManager />
           </TabsContent>
         </Tabs>
 
