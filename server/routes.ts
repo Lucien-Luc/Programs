@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema, insertColumnHeaderSchema } from "@shared/schema";
+import analyticsRouter from "./analytics";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Programs API
@@ -218,6 +219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Authentication failed" });
     }
   });
+
+  // Analytics API routes
+  app.use("/api/analytics", analyticsRouter);
 
   const httpServer = createServer(app);
   return httpServer;

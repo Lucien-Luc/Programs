@@ -28,10 +28,10 @@ import {
 import logo from "@assets/logo_1750430330014.png";
 
 const languages = [
-  { code: "en", label: "🇬🇧 English" },
-  { code: "fr", label: "🇫🇷 Français" },
-  { code: "rw", label: "🇷🇼 Kinyarwanda" },
-  { code: "de", label: "🇨🇭 Deutsch" },
+  { code: "en", label: "🇬🇧", name: "English" },
+  { code: "fr", label: "🇫🇷", name: "Français" },
+  { code: "rw", label: "🇷🇼", name: "Kinyarwanda" },
+  { code: "de", label: "🇩🇪", name: "Deutsch" },
 ];
 
 const themes = [
@@ -76,10 +76,15 @@ export function Navigation() {
             <Calendar className="w-4 h-4" />
             <span>Calendar</span>
           </Button>
-          <Button variant="ghost" className="space-x-2">
-            <ChartBar className="w-4 h-4" />
-            <span>Analytics</span>
-          </Button>
+          <Link href="/analytics">
+            <Button
+              variant={isActive("/analytics") ? "default" : "ghost"}
+              className="space-x-2"
+            >
+              <ChartBar className="w-4 h-4" />
+              <span>Analytics</span>
+            </Button>
+          </Link>
 
         </div>
 
@@ -87,13 +92,18 @@ export function Navigation() {
         <div className="flex items-center space-x-4">
           {/* Language Switcher */}
           <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
+            <SelectTrigger className="w-16">
+              <SelectValue>
+                {languages.find(lang => lang.code === language)?.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {languages.map((lang) => (
                 <SelectItem key={lang.code} value={lang.code}>
-                  {lang.label}
+                  <span className="flex items-center gap-2">
+                    {lang.label}
+                    <span className="text-xs text-muted-foreground">{lang.name}</span>
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
