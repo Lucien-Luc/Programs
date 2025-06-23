@@ -339,7 +339,7 @@ export default function Analytics() {
                 className="border-white/20 text-white hover:bg-white hover:text-blue-600"
               >
                 <Download className="w-4 h-4 mr-2" />
-                {t("export_report")}
+                {t ? t("export_report") : "Export Report"}
               </Button>
               <Button 
                 variant="outline" 

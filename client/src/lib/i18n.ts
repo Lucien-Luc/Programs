@@ -196,10 +196,9 @@ export type Language = keyof typeof translations;
 export type TranslationKey = keyof typeof translations.en;
 
 export function useTranslation(language: Language) {
-  return {
-    t: (key: TranslationKey): string => {
-      return translations[language][key] || translations.en[key] || key;
-    },
-    language
+  const t = (key: TranslationKey): string => {
+    return translations[language]?.[key] || translations.en[key] || key;
   };
+
+  return { t, language };
 }
