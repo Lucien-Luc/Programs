@@ -1,0 +1,34 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables and sensitive files
+.env
+.env.local
+.env.production
+.env.development
+*.env.backup
+
+# Firebase service account keys and admin files
+*firebase-adminsdk*.json
+*serviceAccountKey*.json
+firebase-admin-key.json
+attached_assets/*firebase*.json
+
+# Uploads and user-generated content
+uploads/
+*.pem
+*.key
+
+# Sensitive configuration files
+server/firebase-admin-key.json
