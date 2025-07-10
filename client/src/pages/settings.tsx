@@ -10,7 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/lib/LanguageProvider";
-import { User, Bell, Shield, Database, Monitor, Globe } from "lucide-react";
+import { User, Bell, Shield, Database, Monitor, Globe, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -58,6 +59,14 @@ export default function Settings() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
         <p className="text-muted-foreground">
           Manage your application preferences and configuration
