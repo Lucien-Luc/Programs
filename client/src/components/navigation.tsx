@@ -259,7 +259,7 @@ export function Navigation() {
         <div className="flex items-center space-x-2">
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="relative">
-              <img src={logo} alt="BPN Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
+              <img src={logo} alt="BPN Logo" className="w-50 h-50 object-contain transition-transform group-hover:scale-105" />
               <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div>
