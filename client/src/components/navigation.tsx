@@ -253,7 +253,7 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="nav-blur sticky top-0 z-50 px-6 py-4">
+    <nav className="nav-blur sticky top-0 z-50 px-6 py-2">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left Side: Logo and Brand */}
         <div className="flex items-center space-x-4">
