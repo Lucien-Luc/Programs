@@ -291,67 +291,8 @@ export function Navigation() {
           })}
         </div>
 
-        {/* Right Side: Language Selector, Theme Selector, User Menu */}
+        {/* Right Side: User Menu */}
         <div className="flex items-center space-x-4">
-          {/* Language Selector - Only show on non-admin routes */}
-          {!isAdminRoute && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                  {(() => {
-                    const FlagIcon = getFlagIcon(language);
-                    return <FlagIcon className="w-5 h-4" />;
-                  })()}
-                  <span className="hidden sm:inline text-sm font-medium">
-                    {languages.find(lang => lang.code === language)?.name}
-                  </span>
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {languages.map((lang) => {
-                  const FlagIcon = getFlagIcon(lang.code);
-                  return (
-                    <DropdownMenuItem
-                      key={lang.code}
-                      onClick={() => setLanguage(lang.code as Language)}
-                      className={`flex items-center space-x-3 ${
-                        language === lang.code ? "bg-accent" : ""
-                      }`}
-                    >
-                      <FlagIcon className="w-5 h-4" />
-                      <span className="font-medium">{lang.name}</span>
-                      {language === lang.code && <span className="ml-auto text-primary">✓</span>}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {/* Theme Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                <Palette className="w-4 h-4" />
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {themes.map((themeOption) => (
-                <DropdownMenuItem
-                  key={themeOption.value}
-                  onClick={() => setTheme(themeOption.value as any)}
-                  className={`flex items-center space-x-3 ${
-                    theme === themeOption.value ? "bg-accent" : ""
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full ${themeOption.color}`} />
-                  <span>{themeOption.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {/* Admin Menu - Only show for authenticated admins */}
           {isAdmin() && (
