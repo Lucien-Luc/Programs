@@ -5,6 +5,7 @@ import { EnhancedTableBuilder } from "@/components/admin/enhanced-table-builder"
 import { ColumnHeaderManager } from "@/components/admin/column-header-manager";
 import { ChartCreatorModal } from "@/components/admin/chart-creator-modal";
 import { EnhancedLoginForm } from "@/components/enhanced-login-form";
+import { ConnectionStatus } from "@/components/connection-status";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -496,6 +497,9 @@ export default function Admin() {
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        {/* Connection Status */}
+        <ConnectionStatus />
+
         {/* Enhanced Header Section */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl p-8">
           <div className="flex items-center justify-between">

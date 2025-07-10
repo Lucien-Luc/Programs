@@ -4,6 +4,7 @@ import { useLanguage } from "@/lib/LanguageProvider";
 import { ProgramCard } from "@/components/program-card";
 import { ActivityTable } from "@/components/activity-table";
 import { ProgramModal } from "@/components/program-modal";
+import { ConnectionStatus } from "@/components/connection-status";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrograms, useActivities } from "@/hooks/use-programs";
@@ -53,6 +54,11 @@ export default function Dashboard() {
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Connection Status */}
+        <div className="mb-6">
+          <ConnectionStatus />
+        </div>
+
         {/* Dashboard Header */}
         <div className="hero-gradient text-primary-foreground rounded-3xl p-8 mb-12 relative overflow-hidden">
           
