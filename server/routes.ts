@@ -644,68 +644,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health check endpoints
-  app.get("/api/health/firebase", async (req, res) => {
-    try {
-      // Try to access Firestore by fetching a simple document
-      const firestoreStorage = new FirestoreStorage();
-      await firestoreStorage.getPrograms();
-      res.json({ status: "connected", service: "firebase", timestamp: new Date().toISOString() });
-    } catch (error) {
-      console.error("Firebase health check failed:", error);
-      res.status(500).json({ 
-        status: "disconnected", 
-        service: "firebase", 
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString() 
-      });
-    }
-  });
-
-  app.get("/api/health/postgres", async (req, res) => {
-    try {
-      // Try to access PostgreSQL by performing a simple query
-      const dbStorage = new DatabaseStorage();
-      await dbStorage.getPrograms();
-      res.json({ status: "connected", service: "postgresql", timestamp: new Date().toISOString() });
-    } catch (error) {
-      console.error("PostgreSQL health check failed:", error);
-      res.status(500).json({ 
-        status: "disconnected", 
-        service: "postgresql", 
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString() 
-      });
-    }
-  });
-
-  app.get("/api/health", async (req, res) => {
-    try {
-      const [firebaseCheck, postgresCheck] = await Promise.allSettled([
-        fetch(`${req.protocol}://${req.get('host')}/api/health/firebase`),
-        fetch(`${req.protocol}://${req.get('host')}/api/health/postgres`)
-      ]);
-
-      const firebase = firebaseCheck.status === 'fulfilled' && firebaseCheck.value.ok;
-      const postgres = postgresCheck.status === 'fulfilled' && postgresCheck.value.ok;
-
-      res.json({
-        status: firebase && postgres ? "healthy" : "degraded",
-        services: {
-          firebase: firebase ? "connected" : "disconnected",
-          postgresql: postgres ? "connected" : "disconnected"
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({
-        status: "error",
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }
