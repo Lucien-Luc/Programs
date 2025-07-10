@@ -509,10 +509,12 @@ export function Navigation() {
                   <User className="w-4 h-4 mr-2" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="w-4 h-4 mr-2" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
+                <Link href="/settings">
+                  <DropdownMenuItem>
+                    <Settings className="w-4 h-4 mr-2" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </Link>
                 <Link href="/admin">
                   <DropdownMenuItem>
                     <Shield className="w-4 h-4 mr-2" />

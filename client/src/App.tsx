@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import ProgramDetail from "@/pages/program-detail";
 import Admin from "@/pages/admin-simple";
 import Analytics from "@/pages/analytics";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/program/:id" component={ProgramDetail} />
       <Route path="/admin" component={Admin} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
