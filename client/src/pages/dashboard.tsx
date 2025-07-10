@@ -66,10 +66,10 @@ export default function Dashboard() {
                 <div>
                   <h1 className="text-4xl font-bold mb-3 flex items-center tracking-tight">
                     <BarChart3 className="mr-4 w-10 h-10" />
-                    {t("welcome_title")}
+                    BPN Program Dashboard
                   </h1>
                   <p className="text-primary-foreground/90 text-xl leading-relaxed">
-                    {t("welcome_message")}
+                    Monitor and manage your business programs with real-time insights and analytics
                   </p>
                   <div className="mt-4 flex items-center space-x-6 text-primary-foreground/80">
                     <div className="flex items-center space-x-2">
@@ -91,7 +91,7 @@ export default function Dashboard() {
                   onClick={handleRefresh}
                 >
                   <RefreshCw className="w-5 h-5" />
-                  <span className="font-medium">{t("refresh")}</span>
+                  <span className="font-medium">Refresh</span>
                 </Button>
                 <Button 
                   variant="outline"
@@ -118,7 +118,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-foreground">
-                  {t("programs")}
+                  Active Programs
                 </h2>
                 <p className="text-muted-foreground">Monitor your active program portfolio</p>
               </div>
