@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/lib/LanguageProvider";
 import { AutoTranslateProvider } from "@/lib/auto-translate";
+import { SettingsProvider } from "@/lib/settings-context";
 import Dashboard from "@/pages/dashboard";
 import ProgramDetail from "@/pages/program-detail";
 import Admin from "@/pages/admin-simple";
@@ -31,12 +32,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <LanguageProvider>
-          <AutoTranslateProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </AutoTranslateProvider>
+          <SettingsProvider>
+            <AutoTranslateProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </AutoTranslateProvider>
+          </SettingsProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>

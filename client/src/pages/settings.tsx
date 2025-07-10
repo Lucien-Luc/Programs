@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/lib/LanguageProvider";
+import { useSettings } from "@/lib/settings-context";
 import { User, Bell, Shield, Database, Monitor, Globe, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
@@ -17,43 +17,28 @@ export default function Settings() {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
-  
-  const [settings, setSettings] = useState({
-    notifications: true,
-    emailAlerts: false,
-    autoRefresh: true,
-    refreshInterval: "30",
-    compactView: false,
-    showWelcomeMessage: true,
-    dataRetention: "90",
-    backupEnabled: true,
-    profileName: "Admin User",
-    profileEmail: "admin@example.com",
-  });
+  const { settings, updateSetting } = useSettings();
 
   const handleSaveSettings = () => {
-    localStorage.setItem("appSettings", JSON.stringify(settings));
     toast({ description: "Settings saved successfully!" });
   };
 
   const handleResetSettings = () => {
-    setSettings({
+    const defaultSettings = {
       notifications: true,
       emailAlerts: false,
-      autoRefresh: true,
-      refreshInterval: "30",
       compactView: false,
       showWelcomeMessage: true,
-      dataRetention: "90",
       backupEnabled: true,
       profileName: "Admin User",
       profileEmail: "admin@example.com",
+    };
+    
+    Object.entries(defaultSettings).forEach(([key, value]) => {
+      updateSetting(key, value);
     });
+    
     toast({ description: "Settings reset to defaults" });
-  };
-
-  const updateSetting = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -74,11 +59,10 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="data">Data</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
 
@@ -94,36 +78,7 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Auto Refresh</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically refresh data in the background
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.autoRefresh}
-                  onCheckedChange={(checked) => updateSetting("autoRefresh", checked)}
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="refresh-interval">Refresh Interval (seconds)</Label>
-                <Select
-                  value={settings.refreshInterval}
-                  onValueChange={(value) => updateSetting("refreshInterval", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">15 seconds</SelectItem>
-                    <SelectItem value="30">30 seconds</SelectItem>
-                    <SelectItem value="60">1 minute</SelectItem>
-                    <SelectItem value="300">5 minutes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -148,6 +103,19 @@ export default function Settings() {
                 <Switch
                   checked={settings.showWelcomeMessage}
                   onCheckedChange={(checked) => updateSetting("showWelcomeMessage", checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Automatic Backup</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically backup data on a regular schedule
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.backupEnabled}
+                  onCheckedChange={(checked) => updateSetting("backupEnabled", checked)}
                 />
               </div>
             </CardContent>
@@ -238,52 +206,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="data" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Data Management
-              </CardTitle>
-              <CardDescription>
-                Configure data storage and backup preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="data-retention">Data Retention (days)</Label>
-                <Select
-                  value={settings.dataRetention}
-                  onValueChange={(value) => updateSetting("dataRetention", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 days</SelectItem>
-                    <SelectItem value="90">90 days</SelectItem>
-                    <SelectItem value="180">180 days</SelectItem>
-                    <SelectItem value="365">1 year</SelectItem>
-                    <SelectItem value="unlimited">Unlimited</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Automatic Backup</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically backup data on a regular schedule
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.backupEnabled}
-                  onCheckedChange={(checked) => updateSetting("backupEnabled", checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="profile" className="space-y-6">
           <Card>
