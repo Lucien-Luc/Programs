@@ -59,10 +59,6 @@ export default function Dashboard() {
           <div className="relative z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <div className="relative">
-                  <img src={logo} alt="BPN Logo" className="h-16 w-16 object-contain drop-shadow-lg" />
-                  <div className="absolute inset-0 bg-white/20 rounded-full blur-xl" />
-                </div>
                 <div>
                   <h1 className="text-4xl font-bold mb-3 flex items-center tracking-tight">
                     <BarChart3 className="mr-4 w-10 h-10" />
