@@ -253,14 +253,14 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="nav-blur sticky top-0 z-50 px-2 py-0">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <nav className="nav-blur sticky top-0 z-50 px-2 py-0 h-[44px]">
+      <div className="flex items-center justify-between max-w-7xl mx-auto h-full">
         {/* Left Side: Logo and Brand */}
-        <div className="flex items-center space-x-4">
-          <Link href="/" className="flex items-center space-x-3 group">
+        <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 group">
             <div className="relative">
-              <img src={logo} alt="BPN Logo" className="w-40 h-40 object-contain transition-transform group-hover:scale-105" />
-              <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <img src={logo} alt="BPN Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
+              <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div>
               
