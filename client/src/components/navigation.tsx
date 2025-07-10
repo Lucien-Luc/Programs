@@ -56,8 +56,6 @@ const languages = [
 const themes = [
   { value: "default", label: "Default Theme", color: "bg-primary" },
   { value: "dark", label: "Dark Theme", color: "bg-gray-800" },
-  { value: "blue", label: "Blue Professional", color: "bg-blue-600" },
-  { value: "purple", label: "Custom Modern", color: "bg-gradient-to-r from-purple-500 to-purple-600" },
 ];
 
 export function Navigation() {
