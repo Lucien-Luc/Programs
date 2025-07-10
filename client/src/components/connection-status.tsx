@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 interface ConnectionStatus {
-  firebase: 'connected' | 'disconnected' | 'checking' | 'warning';
+  firebase: 'connected' | 'disconnected' | 'checking';
   postgres: 'connected' | 'disconnected' | 'checking';
   lastChecked: Date;
 }

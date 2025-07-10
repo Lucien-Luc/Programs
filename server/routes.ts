@@ -653,11 +653,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ status: "connected", service: "firebase", timestamp: new Date().toISOString() });
     } catch (error) {
       console.error("Firebase health check failed:", error);
-      // Return 200 with warning status instead of 500 for optional services
-      res.json({ 
-        status: "warning", 
+      res.status(500).json({ 
+        status: "disconnected", 
         service: "firebase", 
-        message: "Firebase not configured - using PostgreSQL only",
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString() 
       });
