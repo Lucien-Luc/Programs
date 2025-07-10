@@ -446,10 +446,7 @@ export function Navigation() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
+                
                 <Link href="/settings">
                   <DropdownMenuItem>
                     <Settings className="w-4 h-4 mr-2" />
