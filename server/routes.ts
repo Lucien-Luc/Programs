@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { DatabaseStorage } from "./databaseStorage";
 import { FirestoreStorage } from "./firestoreStorage";
+import { pool } from "./db";
 import { insertProgramSchema, insertActivitySchema, insertTableConfigSchema, insertColumnHeaderSchema } from "@shared/schema";
 import analyticsRouter from "./analytics";
 import cors from "cors";
@@ -17,6 +18,8 @@ import fs from "fs";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Use memory storage as fallback when Firestore has issues
   const memStorage = storage;
+  // Create database storage instance for PostgreSQL operations
+  const dbStorage = new DatabaseStorage();
   // Create uploads directory if it doesn't exist
   const uploadsDir = path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) {
@@ -374,10 +377,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoints for database connection status
   app.get("/api/health/postgres", async (req, res) => {
     try {
-      // Try to get a simple query to test PostgreSQL connection
-      const result = await dbStorage.getUser("health-check");
+      // Try a simple query to test PostgreSQL connection
+      const result = await pool.query('SELECT 1 as health_check');
       res.json({ status: "connected", timestamp: new Date().toISOString() });
     } catch (error) {
+      console.error("PostgreSQL health check failed:", error);
       res.status(500).json({ status: "disconnected", error: "PostgreSQL connection failed" });
     }
   });
