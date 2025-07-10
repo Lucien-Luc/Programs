@@ -264,9 +264,6 @@ export function Navigation() {
             </div>
             <div>
               
-              <p className="text-sm text-muted-foreground">
-                {isAdminRoute ? "Program Management" : t("welcome_title")}
-              </p>
             </div>
           </Link>
         </div>
