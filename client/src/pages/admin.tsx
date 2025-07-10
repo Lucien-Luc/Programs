@@ -5,6 +5,7 @@ import { EnhancedTableBuilder } from "@/components/admin/enhanced-table-builder"
 import { ColumnHeaderManager } from "@/components/admin/column-header-manager";
 import { ChartCreatorModal } from "@/components/admin/chart-creator-modal";
 import { EnhancedLoginForm } from "@/components/enhanced-login-form";
+import { ConnectionStatus } from "@/components/connection-status";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -772,6 +773,9 @@ export default function Admin() {
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Connection Status Indicators */}
+      <ConnectionStatus />
     </div>
   );
 }

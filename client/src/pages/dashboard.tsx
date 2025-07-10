@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePrograms, useActivities } from "@/hooks/use-programs";
 import { RefreshCw, BarChart3, Plus } from "lucide-react";
 import { useAutoText } from "@/components/auto-text";
+import { ConnectionStatus } from "@/components/connection-status";
 import type { Program } from "@shared/schema";
 import logo from "@assets/logo_1750430330014.png";
 
@@ -150,6 +151,9 @@ export default function Dashboard() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       />
+      
+      {/* Connection Status Indicators */}
+      <ConnectionStatus />
     </div>
   );
 }

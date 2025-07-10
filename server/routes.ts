@@ -370,6 +370,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     }
   });
+
+  // Health check endpoints for database connection status
+  app.get("/api/health/postgres", async (req, res) => {
+    try {
+      // Try to get a simple query to test PostgreSQL connection
+      const result = await dbStorage.getUser("health-check");
+      res.json({ status: "connected", timestamp: new Date().toISOString() });
+    } catch (error) {
+      res.status(500).json({ status: "disconnected", error: "PostgreSQL connection failed" });
+    }
+  });
+
+  app.get("/api/health/firebase", async (req, res) => {
+    try {
+      // Try to get programs to test Firebase connection
+      const programs = await memStorage.getPrograms();
+      res.json({ status: "connected", timestamp: new Date().toISOString() });
+    } catch (error) {
+      res.status(500).json({ status: "disconnected", error: "Firebase connection failed" });
+    }
+  });
+
   // Programs API endpoints - fallback for when Firestore fails
   app.get("/api/programs", async (req, res) => {
     try {
